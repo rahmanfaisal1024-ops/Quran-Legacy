@@ -39,13 +39,14 @@
   <p>Upload your first PDF to get started!</p>
 </div>
 
+<!-- Upload Modal -->
 <div class="modal" id="uploadModal">
   <div class="modal-content">
-    <h2> Upload Surah</h2>
+    <h2>📤 Upload Surah</h2>
     <label>Surah Name</label>
-    <input type="text" id="surahName" placeholder="e.g. Al-Fatiha" />
+    <input type="text" id="surahName" placeholder="e.g. Al-Baqarah" />
     <label>Surah Number (optional)</label>
-    <input type="text" id="surahNumber" placeholder="e.g. 1" />
+    <input type="text" id="surahNumber" placeholder="e.g. 2" />
     <div class="modal-actions">
       <button class="btn-cancel" id="cancelUpload">Cancel</button>
       <button class="btn-save" id="saveUpload">Save</button>
@@ -53,16 +54,28 @@
   </div>
 </div>
 
+<!-- NEW: Subfolder/Ayat List Modal -->
+<div class="modal" id="subfolderModal">
+  <div class="modal-content large-modal">
+    <div class="modal-header">
+      <h2 id="subfolderTitle">Surah Name</h2>
+      <button class="close-btn" id="closeSubfolder">✕</button>
+    </div>
+    <div class="ayat-grid" id="ayatGrid"></div>
+  </div>
+</div>
+
+<!-- PDF Viewer Modal -->
 <div class="viewer" id="viewer">
   <div class="viewer-header">
     <h2 id="viewerTitle">Surah Name</h2>
     <div class="viewer-controls">
-      <button id="prevBtn" title="Previous">◀</button>
+      <button id="prevBtn">◀</button>
       <span id="pageInfo">1 / 1</span>
-      <button id="nextBtn" title="Next">▶</button>
-      <button id="zoomOut" title="Zoom Out">−</button>
-      <button id="zoomIn" title="Zoom In">+</button>
-      <button id="closeViewer" title="Close">✕</button>
+      <button id="nextBtn">▶</button>
+      <button id="zoomOut">−</button>
+      <button id="zoomIn">+</button>
+      <button id="closeViewer">✕</button>
     </div>
   </div>
   <div class="viewer-body">
