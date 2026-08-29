@@ -32,7 +32,6 @@ body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overfl
 .upload-btn.small { padding: 8px 16px; font-size: 0.9rem; }
 .plus { font-size: 1.2rem; font-weight: bold; }
 
-/* Circular Floating Grid */
 .grid-container { position: relative; z-index: 2; display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 60px 40px; perspective: 1000px; }
 
 .folder-card { 
@@ -82,14 +81,19 @@ body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overfl
 .ayat-num { font-size: 2rem; font-weight: bold; color: var(--primary); }
 .ayat-label { font-size: 0.8rem; opacity: 0.7; margin-top: 5px; }
 
-/* Edge-Style Viewer */
 .viewer { display: none; position: fixed; inset: 0; background: #2b2b2b; z-index: 200; flex-direction: column; }
 .viewer.active { display: flex; }
 .viewer-header { padding: 15px 25px; background: #1a1a1a; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; color: #fff; border-bottom: 1px solid #444; }
-.viewer-controls { display: flex; gap: 8px; align-items: center; }
+.viewer-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .viewer-controls button, .btn-download { padding: 8px 14px; background: #333; border: 1px solid #555; color: #fff; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 0.9rem; transition: background 0.2s; }
 .viewer-controls button:hover, .btn-download:hover { background: var(--primary); border-color: var(--primary); }
 #zoomLevel { padding: 0 10px; font-weight: bold; min-width: 50px; text-align: center; }
+
+.page-nav { display: flex; align-items: center; gap: 5px; background: #333; padding: 4px 8px; border-radius: 6px; border: 1px solid #555; }
+#pageInput { width: 50px; padding: 6px; background: #222; border: 1px solid #555; color: #fff; border-radius: 4px; text-align: center; font-size: 0.9rem; }
+#pageInput:focus { outline: none; border-color: var(--primary); }
+.page-nav span { font-size: 0.9rem; color: #ccc; }
+#goToPageBtn { padding: 6px 10px; font-size: 0.85rem; }
 
 .viewer-body { flex: 1; overflow: auto; padding: 20px; display: flex; justify-content: center; background: #525659; }
 #pdfContainer { 
