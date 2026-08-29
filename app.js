@@ -6,11 +6,16 @@ var SUPABASE_KEY = 'sb_publishable_lzcafnJtTDB23vWC1QXEsw_xzC7xzoz';
 var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+const ADMIN_PASSWORD = "admin123"; // Change this if you want!
+
 window.addEventListener('load', function() {
   // Elements
   const surahGrid = document.getElementById('surahGrid');
   const emptyState = document.getElementById('emptyState');
   const createSurahBtn = document.getElementById('createSurahBtn');
+  const adminBtn = document.getElementById('adminBtn');
+  const themeSelect = document.getElementById('themeSelect');
+  
   const surahModal = document.getElementById('surahModal');
   const surahName = document.getElementById('surahName');
   const surahNumber = document.getElementById('surahNumber');
@@ -34,13 +39,46 @@ window.addEventListener('load', function() {
   const viewer = document.getElementById('viewer');
   const viewerTitle = document.getElementById('viewerTitle');
   const pdfCanvas = document.getElementById('pdfCanvas');
-  const zoomIn = document.getElementById('zoomIn');
-  const zoomOut = document.getElementById('zoomOut');
+  const prevPageBtn = document.getElementById('prevPage');
+  const nextPageBtn = document.getElementById('nextPage');
+  const pageInfo = document.getElementById('pageInfo');
+  const downloadBtn = document.getElementById('downloadBtn');
   const closeViewer = document.getElementById('closeViewer');
 
+  let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
   let currentSurahId = null;
   let currentAyatFile = null;
-  let currentScale = 1.2;
+  
+  // Viewer State
+  let pdfDoc = null, currentPage = 1, totalPages = 0, currentScale = 1.2, currentAyatUrl = '';
+
+  // --- ADMIN & THEME ---
+  function updateAdminUI() {
+    createSurahBtn.style.display = isAdmin ? 'flex' : 'none';
+    uploadAyatBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+    adminBtn.textContent = isAdmin ? '🔓 Admin (Logout)' : '🔒 Admin';
+    loadSurahs(); // Reload to show/hide delete buttons
+  }
+
+  adminBtn.onclick = () => {
+    if(isAdmin) {
+      isAdmin = false;
+      sessionStorage.removeItem('isAdmin');
+    } else {
+      let pass = prompt("Enter Admin Password:");
+      if(pass === ADMIN_PASSWORD) {
+        isAdmin = true;
+        sessionStorage.setItem('isAdmin', 'true');
+      } else if(pass !== null) {
+        alert("Wrong password!");
+      }
+    }
+    updateAdminUI();
+  };
+
+  themeSelect.onchange = (e) => {
+    document.body.className = e.target.value;
+  };
 
   // --- LOAD SURAHS ---
   async function loadSurahs() {
@@ -54,8 +92,8 @@ window.addEventListener('load', function() {
       const card = document.createElement('div');
       card.className = 'folder-card';
       card.innerHTML = `
-        <button class="delete-btn" data-id="${surah.id}">🗑</button>
-        <div class="folder-icon">📁</div>
+        ${isAdmin ? `<button class="delete-btn" data-id="${surah.id}">🗑</button>` : ''}
+        <div class="folder-icon"></div>
         <h3>${surah.name}</h3>
         <p>Surah #${surah.number || '?'}</p>
       `;
@@ -63,32 +101,34 @@ window.addEventListener('load', function() {
         if(e.target.classList.contains('delete-btn')) return;
         openFolder(surah);
       };
-      card.querySelector('.delete-btn').onclick = async (e) => {
-        e.stopPropagation();
-        if(confirm(`Delete ${surah.name} and all its Ayats?`)) {
-          await db.from('surahs').delete().eq('id', surah.id);
-          loadSurahs();
-        }
-      };
+      if(isAdmin) {
+        card.querySelector('.delete-btn').onclick = async (e) => {
+          e.stopPropagation();
+          if(confirm(`Delete ${surah.name} and all its Ayats?`)) {
+            await db.from('surahs').delete().eq('id', surah.id);
+            await db.from('ayats').delete().eq('surah_id', surah.id);
+            loadSurahs();
+          }
+        };
+      }
       surahGrid.appendChild(card);
     });
   }
 
-  // --- CREATE SURAH FOLDER ---
+  // --- CREATE SURAH ---
   createSurahBtn.onclick = () => surahModal.classList.add('active');
   cancelSurah.onclick = () => surahModal.classList.remove('active');
   saveSurah.onclick = async () => {
     const name = surahName.value.trim();
     const number = surahNumber.value.trim();
     if(!name) return alert('Please enter a Surah name');
-    
     await db.from('surahs').insert({ name, number });
     surahModal.classList.remove('active');
     surahName.value = ''; surahNumber.value = '';
     loadSurahs();
   };
 
-  // --- OPEN FOLDER (AYAT LIST) ---
+  // --- OPEN FOLDER ---
   async function openFolder(surah) {
     currentSurahId = surah.id;
     folderTitle.textContent = `Surah ${surah.name}`;
@@ -102,18 +142,18 @@ window.addEventListener('load', function() {
     if (error) return console.error(error);
 
     ayatGrid.innerHTML = '';
-    if(!data.length) ayatGrid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:#aaa;">No Ayats uploaded yet.</p>';
+    if(!data.length) ayatGrid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.7;">No Ayats uploaded yet.</p>';
 
     data.forEach(ayat => {
       const card = document.createElement('div');
       card.className = 'ayat-card';
-      card.innerHTML = `<div class="ayat-num">${ayat.ayat_number}</div><div class="ayat-label">Ayat PDF</div>`;
-      card.onclick = () => openViewer(ayat.file_url, `Ayat ${ayat.ayat_number}`);
+      card.innerHTML = `<div class="ayat-num">${ayat.ayat_number}</div><div class="ayat-label">${ayat.name}</div>`;
+      card.onclick = () => openViewer(ayat.file_url, ayat.name);
       ayatGrid.appendChild(card);
     });
   }
 
-  // --- UPLOAD AYAT PDF ---
+  // --- UPLOAD AYAT ---
   uploadAyatBtn.onclick = () => ayatModal.classList.add('active');
   cancelAyat.onclick = () => { ayatModal.classList.remove('active'); currentAyatFile = null; selectedFileName.textContent = ''; };
   
@@ -131,19 +171,19 @@ window.addEventListener('load', function() {
     saveAyat.disabled = true;
 
     try {
-      // Upload PDF
+      // Use the actual file name (without .pdf) as the Ayat name
+      const pdfName = currentAyatFile.name.replace(/\.pdf$/i, '');
       const fileName = `surah_${currentSurahId}_ayat_${num}_${Date.now()}.pdf`;
+      
       const { error: uploadError } = await db.storage.from('pdfs').upload(fileName, currentAyatFile);
       if(uploadError) throw uploadError;
 
-      // Get URL
       const { data: urlData } = db.storage.from('pdfs').getPublicUrl(fileName);
 
-      // Save to DB
       const { error: dbError } = await db.from('ayats').insert({
         surah_id: currentSurahId,
         ayat_number: num,
-        name: `Ayat ${num}`,
+        name: pdfName, // Using file name here!
         file_url: urlData.publicUrl
       });
       if(dbError) throw dbError;
@@ -158,27 +198,33 @@ window.addEventListener('load', function() {
     }
   };
 
-  // --- VIEWER ---
+  // --- PDF VIEWER WITH NAVIGATION ---
   async function openViewer(url, title) {
     viewer.classList.add('active');
     viewerTitle.textContent = title;
+    currentAyatUrl = url;
+    downloadBtn.href = url; // Set download link
+    
     const res = await fetch(url);
     const buffer = await res.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
-    const page = await pdf.getPage(1);
-    renderPage(page);
+    pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+    totalPages = pdfDoc.numPages;
+    currentPage = 1;
+    renderPage();
   }
 
-  async function renderPage(page) {
+  async function renderPage() {
+    const page = await pdfDoc.getPage(currentPage);
     const viewport = page.getViewport({ scale: currentScale });
     pdfCanvas.width = viewport.width; pdfCanvas.height = viewport.height;
     await page.render({ canvasContext: pdfCanvas.getContext('2d'), viewport }).promise;
+    pageInfo.textContent = `${currentPage} / ${totalPages}`;
   }
 
-  zoomIn.onclick = () => { currentScale += 0.2; /* Re-render logic would go here */ };
-  zoomOut.onclick = () => { if(currentScale > 0.5) currentScale -= 0.2; };
+  prevPageBtn.onclick = () => { if(currentPage > 1) { currentPage--; renderPage(); } };
+  nextPageBtn.onclick = () => { if(currentPage < totalPages) { currentPage++; renderPage(); } };
   closeViewer.onclick = () => viewer.classList.remove('active');
 
   // Init
-  loadSurahs();
+  updateAdminUI();
 });
