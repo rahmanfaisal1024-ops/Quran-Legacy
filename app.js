@@ -6,26 +6,22 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 var ADMIN_PASSWORD = "admin123"; 
 
 window.addEventListener('load', function() {
-  // Views
   var surahView = document.getElementById('surahView');
   var ayatView = document.getElementById('ayatView');
   var backBtn = document.getElementById('backBtn');
   var monkey = document.getElementById('monkey');
 
-  // Grids & States
   var surahGrid = document.getElementById('surahGrid');
   var emptyState = document.getElementById('emptyState');
   var ayatGrid = document.getElementById('ayatGrid');
   var ayatEmptyState = document.getElementById('ayatEmptyState');
 
-  // Controls
   var createSurahBtn = document.getElementById('createSurahBtn');
   var adminBtn = document.getElementById('adminBtn');
   var themeSelect = document.getElementById('themeSelect');
   var uploadAyatBtn = document.getElementById('uploadAyatBtn');
   var downloadAllBtn = document.getElementById('downloadAllBtn');
 
-  // Modals
   var surahModal = document.getElementById('surahModal');
   var surahName = document.getElementById('surahName');
   var surahNumber = document.getElementById('surahNumber');
@@ -39,7 +35,6 @@ window.addEventListener('load', function() {
   var saveAyat = document.getElementById('saveAyat');
   var cancelAyat = document.getElementById('cancelAyat');
 
-  // Viewer
   var viewer = document.getElementById('viewer');
   var viewerTitle = document.getElementById('viewerTitle');
   var pdfContainer = document.getElementById('pdfContainer');
@@ -61,7 +56,6 @@ window.addEventListener('load', function() {
   var observer = null;
   var isViewerLoading = false;
 
-  // --- NAVIGATION ---
   function showSurahs() {
     ayatView.style.display = 'none';
     surahView.style.display = 'block';
@@ -74,13 +68,17 @@ window.addEventListener('load', function() {
     surahView.style.display = 'none';
     ayatView.style.display = 'block';
     backBtn.style.display = 'inline-block';
-    document.getElementById('folderTitle').textContent = 'Surah ' + surah.name; // Kept for ZIP naming
+    document.getElementById('folderTitle').textContent = 'Surah ' + surah.name;
+    
+    // INSTANT FEEDBACK: Show spinner immediately so user doesn't go back
+    ayatGrid.innerHTML = '<div class="loader"></div>';
+    ayatEmptyState.style.display = 'none';
+    
     loadAyats();
   }
 
   backBtn.onclick = showSurahs;
 
-  // --- ADMIN & THEME ---
   function updateAdminUI() {
     createSurahBtn.style.display = isAdmin ? 'flex' : 'none';
     uploadAyatBtn.style.display = isAdmin ? 'inline-flex' : 'none';
@@ -99,7 +97,6 @@ window.addEventListener('load', function() {
   };
   themeSelect.onchange = function(e) { document.body.className = e.target.value; };
 
-  // --- LOAD SURAHS ---
   async function loadSurahs() {
     var result = await db.from('surahs').select('*').order('number', { ascending: true });
     var data = result.data; var error = result.error;
@@ -112,8 +109,8 @@ window.addEventListener('load', function() {
       var surah = data[i];
       var card = document.createElement('div');
       card.className = 'folder-card';
-      var deleteBtnHtml = isAdmin ? '<button class="delete-btn" data-id="' + surah.id + '">🗑</button>' : '';
-      card.innerHTML = deleteBtnHtml + '<div class="folder-icon">📁</div><h3>' + surah.name + '</h3><p>Surah #' + (surah.number || '?') + '</p>';
+      var deleteBtnHtml = isAdmin ? '<button class="delete-btn" data-id="' + surah.id + '"></button>' : '';
+      card.innerHTML = deleteBtnHtml + '<div class="folder-icon"></div><h3>' + surah.name + '</h3><p>Surah #' + (surah.number || '?') + '</p>';
       
       card.onclick = function(e) { if(e.target.classList.contains('delete-btn')) return; showAyats(surah); };
       if(isAdmin) {
@@ -138,13 +135,12 @@ window.addEventListener('load', function() {
     loadSurahs();
   };
 
-  // --- LOAD AYATS ---
   async function loadAyats() {
     var result = await db.from('ayats').select('*').eq('surah_id', currentSurahId).order('ayat_number', { ascending: true });
     var data = result.data; var error = result.error;
     if (error) return console.error(error);
 
-    ayatGrid.innerHTML = '';
+    ayatGrid.innerHTML = ''; // Clear spinner
     ayatEmptyState.style.display = (!data || data.length === 0) ? 'block' : 'none';
 
     for (var i = 0; i < data.length; i++) {
@@ -152,100 +148,108 @@ window.addEventListener('load', function() {
       var card = document.createElement('div');
       card.className = 'ayat-card';
       card.innerHTML = '<div class="ayat-num">' + ayat.ayat_number + '</div><div class="ayat-label">' + ayat.name + '</div>';
-      
-      // THE MONKEY CLICK HANDLER
       card.onclick = function() { runMonkeyAndOpenPDF(ayat.file_url, ayat.name, card); };
       ayatGrid.appendChild(card);
     }
   }
 
-  // --- THE RUNNING MONKEY & INSTANT PDF OPEN ---
   async function runMonkeyAndOpenPDF(url, title, cardElement) {
     if (isViewerLoading) return;
     isViewerLoading = true;
 
-    // 1. Position Monkey at start (bottom left)
     monkey.style.display = 'block';
     monkey.style.transition = 'none';
     monkey.style.left = '5%';
     monkey.style.top = '90%';
     monkey.style.transform = 'scale(1) rotate(0deg)';
-    void monkey.offsetWidth; // Force reflow
+    void monkey.offsetWidth;
 
-    // 2. Calculate target (center of clicked card)
     var rect = cardElement.getBoundingClientRect();
-    var targetX = rect.left + (rect.width / 2) - 32; // 32 is half monkey size
+    var targetX = rect.left + (rect.width / 2) - 32;
     var targetY = rect.top + (rect.height / 2) - 32;
 
-    // 3. Start PDF loading in background
     var pdfPromise = preparePDF(url, title);
 
-    // 4. Start Monkey Animation (1.5 seconds fun run)
-    var animDuration = 1500;
+    var animDuration = 1200;
     monkey.style.transition = 'all ' + animDuration + 'ms cubic-bezier(0.25, 0.46, 0.45, 0.94)';
     monkey.style.left = targetX + 'px';
     monkey.style.top = targetY + 'px';
-    monkey.style.transform = 'scale(1.5) rotate(360deg)'; // Monkey spins and grows at destination
+    monkey.style.transform = 'scale(1.5) rotate(360deg)';
 
     var animPromise = new Promise(function(resolve) { setTimeout(resolve, animDuration); });
 
-    // 5. Wait for BOTH the PDF to finish loading AND the monkey to arrive
     await Promise.all([pdfPromise, animPromise]);
 
-    // 6. Hide monkey and show viewer IMMEDIATELY (no loading slides!)
     monkey.style.display = 'none';
-    viewer.classList.add('active');
     isViewerLoading = false;
   }
 
   async function preparePDF(url, title) {
+    // 1. OPEN VIEWER INSTANTLY WITH LOADER
+    viewer.classList.add('active');
+    viewerTitle.textContent = title;
+    downloadBtn.href = url;
+    pdfContainer.innerHTML = '<div class="loader" style="margin-top: 100px;"></div>';
+    currentScale = 1.2;
+    updateZoomDisplay();
+
+    // 2. FETCH PDF
     var res = await fetch(url);
     var buffer = await res.arrayBuffer();
     var pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
     
     totalPages = pdfDoc.numPages;
-    viewerTitle.textContent = title;
-    downloadBtn.href = url;
     pageInput.value = 1;
     pageInput.max = totalPages;
     totalPagesDisplay.textContent = totalPages;
 
-    if (observer) { observer.disconnect(); observer = null; }
+    // 3. CLEAR LOADER
+    pdfContainer.innerHTML = '';
 
-    // Render ALL pages into a hidden fragment first
-    var fragment = document.createDocumentFragment();
+    // 4. CREATE CANVASES (LAZY LOADING)
+    var canvasesData = [];
     for (var i = 1; i <= totalPages; i++) {
       var page = await pdfDoc.getPage(i);
       var viewport = page.getViewport({ scale: currentScale });
       var canvas = document.createElement('canvas');
       canvas.id = 'page-canvas-' + i;
-      canvas.width = viewport.width; canvas.height = viewport.height;
-      var context = canvas.getContext('2d');
-      await page.render({ canvasContext: context, viewport: viewport }).promise;
-      fragment.appendChild(canvas);
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      canvas.style.background = '#fff';
+      canvas.dataset.pageNum = i;
+      pdfContainer.appendChild(canvas);
+      canvasesData.push({ canvas: canvas, page: page, viewport: viewport });
     }
 
-    // Inject all pages at once for instant display
-    pdfContainer.innerHTML = '';
-    pdfContainer.appendChild(fragment);
     applyZoom();
 
-    // Setup page tracking observer
-    var options = { root: viewerBody, threshold: 0.5 };
+    // 5. LAZY RENDER OBSERVER
+    if (observer) observer.disconnect();
+
     observer = new IntersectionObserver(function(entries) {
-      for (var j = 0; j < entries.length; j++) {
-        var entry = entries[j];
+      entries.forEach(function(entry) {
         if (entry.isIntersecting) {
-          var pageNum = parseInt(entry.target.id.replace('page-canvas-', ''));
+          var canvas = entry.target;
+          var pageNum = parseInt(canvas.dataset.pageNum);
+          var pData = canvasesData.find(function(c) { return c.canvas === canvas; });
+          
+          if (pData && !canvas.dataset.rendered) {
+            var context = canvas.getContext('2d');
+            pData.page.render({ canvasContext: context, viewport: pData.viewport }).promise.then(function() {
+              canvas.dataset.rendered = 'true';
+            });
+            observer.unobserve(canvas);
+          }
           pageInput.value = pageNum;
         }
-      }
-    }, options);
-    var canvases = pdfContainer.querySelectorAll('canvas');
-    for (var k = 0; k < canvases.length; k++) { observer.observe(canvases[k]); }
+      });
+    }, { root: viewerBody, rootMargin: '300px', threshold: 0.1 });
+
+    for (var k = 0; k < canvasesData.length; k++) {
+      observer.observe(canvasesData[k].canvas);
+    }
   }
 
-  // --- DOWNLOAD ALL ZIP ---
   downloadAllBtn.onclick = async function() {
     downloadAllBtn.textContent = 'Zipping...'; downloadAllBtn.disabled = true;
     try {
@@ -261,10 +265,9 @@ window.addEventListener('load', function() {
       }
       saveAs(await zip.generateAsync({ type: 'blob' }), folderName + '_complete.zip');
     } catch (err) { alert('Failed: ' + err.message); }
-    finally { downloadAllBtn.textContent = '⬇ Download All (ZIP)'; downloadAllBtn.disabled = false; }
+    finally { downloadAllBtn.textContent = ' Download All (ZIP)'; downloadAllBtn.disabled = false; }
   };
 
-  // --- UPLOAD AYAT ---
   uploadAyatBtn.onclick = function() { ayatModal.classList.add('active'); };
   cancelAyat.onclick = function() { ayatModal.classList.remove('active'); currentAyatFile = null; selectedFileName.textContent = ''; };
   selectFileBtn.onclick = function() { ayatFileInput.click(); };
@@ -287,7 +290,6 @@ window.addEventListener('load', function() {
     finally { saveAyat.textContent = 'Upload'; saveAyat.disabled = false; }
   };
 
-  // --- VIEWER CONTROLS ---
   function updateZoomDisplay() { zoomLevel.textContent = Math.round(currentScale * 100) + '%'; }
   function applyZoom() { pdfContainer.style.transform = 'scale(' + currentScale + ')'; }
   zoomInBtn.onclick = function() { currentScale += 0.2; updateZoomDisplay(); applyZoom(); };
@@ -305,6 +307,5 @@ window.addEventListener('load', function() {
   goToPageBtn.onclick = goToPage;
   pageInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') goToPage(); });
 
-  // Init
   updateAdminUI();
 });
