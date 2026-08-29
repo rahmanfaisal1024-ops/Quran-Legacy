@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Ayat PDF Viewer — Surah Library</title>
+<title>Ayat PDF Library</title>
 <link rel="stylesheet" href="styles.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -11,77 +11,76 @@
 <body>
 
 <div class="bg-animation">
-  <div class="circle c1"></div>
-  <div class="circle c2"></div>
-  <div class="circle c3"></div>
+  <div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div>
 </div>
 
 <header class="header">
-  <div class="logo">
-    <span class="logo-icon">📖</span>
-    <h1>Ayat <span class="gradient-text">Library</span></h1>
-  </div>
-  <button class="upload-btn" id="uploadBtn">
-    <span class="plus">+</span> Upload Surah PDF
-  </button>
-  <input type="file" id="fileInput" accept="application/pdf" hidden />
+  <div class="logo"><span class="logo-icon">📖</span><h1>Ayat <span class="gradient-text">Library</span></h1></div>
+  <button class="upload-btn" id="createSurahBtn"><span class="plus">+</span> New Surah Folder</button>
 </header>
 
-<div class="search-wrap">
-  <input type="text" id="searchInput" placeholder="🔍 Search Surah..." />
-</div>
-
-<main class="grid-container" id="grid"></main>
+<main class="grid-container" id="surahGrid"></main>
 
 <div class="empty-state" id="emptyState">
   <div class="empty-icon">📂</div>
   <h2>No Surahs yet</h2>
-  <p>Upload your first PDF to get started!</p>
+  <p>Click "New Surah Folder" to start!</p>
 </div>
 
-<!-- Upload Modal -->
-<div class="modal" id="uploadModal">
+<!-- Modal: Create Surah Folder -->
+<div class="modal" id="surahModal">
   <div class="modal-content">
-    <h2>📤 Upload Surah</h2>
+    <h2>Create Surah Folder</h2>
     <label>Surah Name</label>
     <input type="text" id="surahName" placeholder="e.g. Al-Baqarah" />
-    <label>Surah Number (optional)</label>
+    <label>Surah Number</label>
     <input type="text" id="surahNumber" placeholder="e.g. 2" />
     <div class="modal-actions">
-      <button class="btn-cancel" id="cancelUpload">Cancel</button>
-      <button class="btn-save" id="saveUpload">Save</button>
+      <button class="btn-cancel" id="cancelSurah">Cancel</button>
+      <button class="btn-save" id="saveSurah">Create Folder</button>
     </div>
   </div>
 </div>
 
-<!-- NEW: Subfolder/Ayat List Modal -->
-<div class="modal" id="subfolderModal">
+<!-- Modal: Inside Surah Folder (Ayat List) -->
+<div class="modal" id="folderModal">
   <div class="modal-content large-modal">
     <div class="modal-header">
-      <h2 id="subfolderTitle">Surah Name</h2>
-      <button class="close-btn" id="closeSubfolder">✕</button>
+      <h2 id="folderTitle">Surah Name</h2>
+      <button class="close-btn" id="closeFolder">✕</button>
+    </div>
+    <div class="folder-actions">
+      <button class="upload-btn small" id="uploadAyatBtn"><span class="plus">+</span> Upload Ayat PDF</button>
     </div>
     <div class="ayat-grid" id="ayatGrid"></div>
   </div>
 </div>
 
-<!-- PDF Viewer Modal -->
-<div class="viewer" id="viewer">
-  <div class="viewer-header">
-    <h2 id="viewerTitle">Surah Name</h2>
-    <div class="viewer-controls">
-      <button id="prevBtn">◀</button>
-      <span id="pageInfo">1 / 1</span>
-      <button id="nextBtn">▶</button>
-      <button id="zoomOut">−</button>
-      <button id="zoomIn">+</button>
-      <button id="closeViewer">✕</button>
+<!-- Modal: Upload Ayat PDF -->
+<div class="modal" id="ayatModal">
+  <div class="modal-content">
+    <h2>Upload Ayat PDF</h2>
+    <label>Ayat Number</label>
+    <input type="number" id="ayatNumber" placeholder="e.g. 1" />
+    <input type="file" id="ayatFileInput" accept="application/pdf" hidden />
+    <button class="btn-save" id="selectFileBtn" style="width:100%; margin-top:10px;">Select PDF File</button>
+    <p id="selectedFileName" style="color:#aaa; margin-top:10px; text-align:center;"></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelAyat">Cancel</button>
+      <button class="btn-save" id="saveAyat">Upload</button>
     </div>
   </div>
-  <div class="viewer-body">
-    <canvas id="pdfCanvas"></canvas>
+</div>
+
+<!-- PDF Viewer -->
+<div class="viewer" id="viewer">
+  <div class="viewer-header">
+    <h2 id="viewerTitle">Ayat Viewer</h2>
+    <div class="viewer-controls">
+      <button id="zoomOut">−</button><button id="zoomIn">+</button><button id="closeViewer">✕</button>
+    </div>
   </div>
-  <div class="thumbnail-strip" id="thumbStrip"></div>
+  <div class="viewer-body"><canvas id="pdfCanvas"></canvas></div>
 </div>
 
 <script src="app.js"></script>
