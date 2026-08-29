@@ -7,14 +7,8 @@ body.light { --bg-grad: linear-gradient(135deg, #f5f7fa, #c3cfe2); --text: #333;
 body.gold { --bg-grad: linear-gradient(135deg, #3e2b14, #6b4c1e, #3e2b14); --text: #ffd700; --card-bg: rgba(255,215,0,0.1); --card-border: rgba(255,215,0,0.3); --primary: #ffd700; --secondary: #b8860b; }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+/* FAST BACKGROUND: No heavy blur animations */
 body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overflow-x: hidden; transition: background 0.5s, color 0.5s; }
-
-.bg-animation { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-.circle { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4; animation: float 15s infinite ease-in-out; }
-.c1 { width: 400px; height: 400px; background: var(--primary); top: -100px; left: -100px; }
-.c2 { width: 500px; height: 500px; background: var(--secondary); bottom: -150px; right: -150px; animation-delay: -5s; }
-.c3 { width: 300px; height: 300px; background: #4facfe; top: 50%; left: 50%; animation-delay: -10s; }
-@keyframes float { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(50px,-50px) scale(1.1); } 66% { transform: translate(-50px,50px) scale(0.9); } }
 
 .header { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--card-border); }
 .logo { display: flex; align-items: center; gap: 12px; }
