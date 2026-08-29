@@ -55,8 +55,22 @@ body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overfl
 .empty-state { text-align: center; padding: 60px 20px; position: relative; z-index: 2; }
 .empty-icon { font-size: 5rem; margin-bottom: 20px; animation: bounce 2s infinite; }
 
-.loader { border: 5px solid rgba(255,255,255,0.1); border-top: 5px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 50px auto; }
+/* FAST LOADERS */
+.main-loader {
+  position: fixed; inset: 0; background: var(--bg-grad); z-index: 99999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: opacity 0.5s ease;
+}
+.main-loader.hidden { opacity: 0; pointer-events: none; }
+.main-loader p { margin-top: 20px; font-size: 1.2rem; color: var(--text); }
+.spinner {
+  width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.1);
+  border-top: 5px solid var(--primary); border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.loader { border: 5px solid rgba(255,255,255,0.1); border-top: 5px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 50px auto; }
 
 .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
 .modal.active { display: flex; }
@@ -72,24 +86,15 @@ body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overfl
 
 .folder-actions { text-align: center; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; z-index: 2; position: relative; }
 
-/* --- THE ALWAYS-VISIBLE RUNNING MONKEY --- */
+/* MONKEY */
 #monkey {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 70px;
-  height: 70px;
-  z-index: 9999;
-  pointer-events: none;
+  position: fixed; bottom: 20px; right: 20px; width: 70px; height: 70px;
+  z-index: 9999; pointer-events: none;
   transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
-  /* Idle animation: gentle breathing */
   animation: idleBreathe 2s infinite ease-in-out;
 }
-@keyframes idleBreathe {
-  0%, 100% { transform: scale(1) translateY(0); }
-  50% { transform: scale(1.05) translateY(-5px); }
-}
+@keyframes idleBreathe { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(1.05) translateY(-5px); } }
 
 .viewer { display: none; position: fixed; inset: 0; background: #2b2b2b; z-index: 200; flex-direction: column; }
 .viewer.active { display: flex; }
