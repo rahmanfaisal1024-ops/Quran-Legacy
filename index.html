@@ -1,282 +1,114 @@
-// ============================================
-// CONFIGURATION
-// ============================================
-var SUPABASE_URL = 'https://fkeyxtulzphwbhtizpcj.supabase.co';
-var SUPABASE_KEY = 'sb_publishable_lzcafnJtTDB23vWC1QXEsw_xzC7xzoz';
-var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Quranlegacy</title>
+<link rel="stylesheet" href="styles.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
 
-const ADMIN_PASSWORD = "admin123"; 
+<div class="bg-animation">
+  <div class="circle c1"></div>
+  <div class="circle c2"></div>
+  <div class="circle c3"></div>
+</div>
 
-window.addEventListener('load', function() {
-  // Elements
-  const surahGrid = document.getElementById('surahGrid');
-  const emptyState = document.getElementById('emptyState');
-  const createSurahBtn = document.getElementById('createSurahBtn');
-  const adminBtn = document.getElementById('adminBtn');
-  const themeSelect = document.getElementById('themeSelect');
-  
-  const surahModal = document.getElementById('surahModal');
-  const surahName = document.getElementById('surahName');
-  const surahNumber = document.getElementById('surahNumber');
-  const saveSurah = document.getElementById('saveSurah');
-  const cancelSurah = document.getElementById('cancelSurah');
+<header class="header">
+  <div class="logo">
+    <span class="logo-icon">📖</span>
+    <h1>Quran<span class="gradient-text">legacy</span></h1>
+  </div>
+  <div class="header-controls">
+    <select id="themeSelect">
+      <option value="dark">🌙 Dark</option>
+      <option value="light">☀️ Light</option>
+      <option value="gold">✨ Gold</option>
+    </select>
+    <button class="admin-btn" id="adminBtn">🔒 Admin</button>
+    <button class="upload-btn" id="createSurahBtn" style="display:none;"><span class="plus">+</span> New Surah</button>
+  </div>
+</header>
 
-  const folderModal = document.getElementById('folderModal');
-  const folderTitle = document.getElementById('folderTitle');
-  const closeFolder = document.getElementById('closeFolder');
-  const uploadAyatBtn = document.getElementById('uploadAyatBtn');
-  const ayatGrid = document.getElementById('ayatGrid');
+<main class="grid-container" id="surahGrid"></main>
 
-  const ayatModal = document.getElementById('ayatModal');
-  const ayatNumber = document.getElementById('ayatNumber');
-  const ayatFileInput = document.getElementById('ayatFileInput');
-  const selectFileBtn = document.getElementById('selectFileBtn');
-  const selectedFileName = document.getElementById('selectedFileName');
-  const saveAyat = document.getElementById('saveAyat');
-  const cancelAyat = document.getElementById('cancelAyat');
+<div class="empty-state" id="emptyState">
+  <div class="empty-icon">📂</div>
+  <h2>No Surahs yet</h2>
+  <p>Admin: Click "New Surah" to start!</p>
+</div>
 
-  const viewer = document.getElementById('viewer');
-  const viewerTitle = document.getElementById('viewerTitle');
-  const pdfContainer = document.getElementById('pdfContainer');
-  const viewerBody = document.getElementById('viewerBody');
-  const zoomInBtn = document.getElementById('zoomInBtn');
-  const zoomOutBtn = document.getElementById('zoomOutBtn');
-  const zoomLevel = document.getElementById('zoomLevel');
-  const downloadBtn = document.getElementById('downloadBtn');
-  const closeViewer = document.getElementById('closeViewer');
-  
-  // NEW: Page Navigation Elements
-  const pageInput = document.getElementById('pageInput');
-  const totalPagesDisplay = document.getElementById('totalPagesDisplay');
-  const goToPageBtn = document.getElementById('goToPageBtn');
+<!-- Modal: Create Surah -->
+<div class="modal" id="surahModal">
+  <div class="modal-content">
+    <h2>Create Surah Folder</h2>
+    <label>Surah Name</label>
+    <input type="text" id="surahName" placeholder="e.g. Al-Baqarah" />
+    <label>Surah Number</label>
+    <input type="text" id="surahNumber" placeholder="e.g. 2" />
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelSurah">Cancel</button>
+      <button class="btn-save" id="saveSurah">Create</button>
+    </div>
+  </div>
+</div>
 
-  let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
-  let currentSurahId = null;
-  let currentAyatFile = null;
-  let currentScale = 1.2;
-  let totalPages = 0;
-  let observer = null;
+<!-- Modal: Inside Folder (Ayat List) -->
+<div class="modal" id="folderModal">
+  <div class="modal-content large-modal">
+    <div class="modal-header">
+      <h2 id="folderTitle">Surah Name</h2>
+      <button class="close-btn" id="closeFolder">✕</button>
+    </div>
+    <div class="folder-actions">
+      <button class="upload-btn small" id="uploadAyatBtn" style="display:none;"><span class="plus">+</span> Upload Ayat PDF</button>
+    </div>
+    <div class="ayat-grid" id="ayatGrid"></div>
+  </div>
+</div>
 
-  // --- ADMIN & THEME ---
-  function updateAdminUI() {
-    createSurahBtn.style.display = isAdmin ? 'flex' : 'none';
-    uploadAyatBtn.style.display = isAdmin ? 'inline-flex' : 'none';
-    adminBtn.textContent = isAdmin ? '🔓 Admin (Logout)' : '🔒 Admin';
-    loadSurahs(); 
-  }
+<!-- Modal: Upload Ayat -->
+<div class="modal" id="ayatModal">
+  <div class="modal-content">
+    <h2>Upload Ayat PDF</h2>
+    <label>Ayat Number</label>
+    <input type="number" id="ayatNumber" placeholder="e.g. 1" />
+    <input type="file" id="ayatFileInput" accept="application/pdf" hidden />
+    <button class="btn-save" id="selectFileBtn" style="width:100%; margin-top:10px;">Select PDF File</button>
+    <p id="selectedFileName" style="color:#aaa; margin-top:10px; text-align:center;"></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelAyat">Cancel</button>
+      <button class="btn-save" id="saveAyat">Upload</button>
+    </div>
+  </div>
+</div>
 
-  adminBtn.onclick = () => {
-    if(isAdmin) {
-      isAdmin = false;
-      sessionStorage.removeItem('isAdmin');
-    } else {
-      let pass = prompt("Enter Admin Password:");
-      if(pass === ADMIN_PASSWORD) {
-        isAdmin = true;
-        sessionStorage.setItem('isAdmin', 'true');
-      } else if(pass !== null) {
-        alert("Wrong password!");
-      }
-    }
-    updateAdminUI();
-  };
-
-  themeSelect.onchange = (e) => { document.body.className = e.target.value; };
-
-  // --- LOAD SURAHS ---
-  async function loadSurahs() {
-    const { data, error } = await db.from('surahs').select('*').order('number', { ascending: true });
-    if (error) return console.error(error);
-    
-    surahGrid.innerHTML = '';
-    emptyState.style.display = data.length ? 'none' : 'block';
-
-    data.forEach(surah => {
-      const card = document.createElement('div');
-      card.className = 'folder-card';
-      card.innerHTML = `
-        ${isAdmin ? `<button class="delete-btn" data-id="${surah.id}">🗑</button>` : ''}
-        <div class="folder-icon">📁</div>
-        <h3>${surah.name}</h3>
-        <p>Surah #${surah.number || '?'}</p>
-      `;
-      card.onclick = (e) => {
-        if(e.target.classList.contains('delete-btn')) return;
-        openFolder(surah);
-      };
-      if(isAdmin) {
-        card.querySelector('.delete-btn').onclick = async (e) => {
-          e.stopPropagation();
-          if(confirm(`Delete ${surah.name} and all its Ayats?`)) {
-            await db.from('surahs').delete().eq('id', surah.id);
-            await db.from('ayats').delete().eq('surah_id', surah.id);
-            loadSurahs();
-          }
-        };
-      }
-      surahGrid.appendChild(card);
-    });
-  }
-
-  createSurahBtn.onclick = () => surahModal.classList.add('active');
-  cancelSurah.onclick = () => surahModal.classList.remove('active');
-  saveSurah.onclick = async () => {
-    const name = surahName.value.trim();
-    const number = surahNumber.value.trim();
-    if(!name) return alert('Please enter a Surah name');
-    await db.from('surahs').insert({ name, number });
-    surahModal.classList.remove('active');
-    surahName.value = ''; surahNumber.value = '';
-    loadSurahs();
-  };
-
-  async function openFolder(surah) {
-    currentSurahId = surah.id;
-    folderTitle.textContent = `Surah ${surah.name}`;
-    folderModal.classList.add('active');
-    loadAyats();
-  }
-  closeFolder.onclick = () => folderModal.classList.remove('active');
-
-  async function loadAyats() {
-    const { data, error } = await db.from('ayats').select('*').eq('surah_id', currentSurahId).order('ayat_number', { ascending: true });
-    if (error) return console.error(error);
-
-    ayatGrid.innerHTML = '';
-    if(!data.length) ayatGrid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.7;">No Ayats uploaded yet.</p>';
-
-    data.forEach(ayat => {
-      const card = document.createElement('div');
-      card.className = 'ayat-card';
-      card.innerHTML = `<div class="ayat-num">${ayat.ayat_number}</div><div class="ayat-label">${ayat.name}</div>`;
-      card.onclick = () => openViewer(ayat.file_url, ayat.name);
-      ayatGrid.appendChild(card);
-    });
-  }
-
-  uploadAyatBtn.onclick = () => ayatModal.classList.add('active');
-  cancelAyat.onclick = () => { ayatModal.classList.remove('active'); currentAyatFile = null; selectedFileName.textContent = ''; };
-  
-  selectFileBtn.onclick = () => ayatFileInput.click();
-  ayatFileInput.onchange = (e) => {
-    currentAyatFile = e.target.files[0];
-    if(currentAyatFile) selectedFileName.textContent = `Selected: ${currentAyatFile.name}`;
-  };
-
-  saveAyat.onclick = async () => {
-    const num = parseInt(ayatNumber.value);
-    if(!num || !currentAyatFile) return alert('Please enter Ayat number and select a PDF file');
-    
-    saveAyat.textContent = 'Uploading...';
-    saveAyat.disabled = true;
-
-    try {
-      const pdfName = currentAyatFile.name.replace(/\.pdf$/i, '');
-      const fileName = `surah_${currentSurahId}_ayat_${num}_${Date.now()}.pdf`;
+<!-- PDF Viewer -->
+<div class="viewer" id="viewer">
+  <div class="viewer-header">
+    <h2 id="viewerTitle">Ayat Viewer</h2>
+    <div class="viewer-controls">
+      <button id="zoomOutBtn">− Zoom</button>
+      <span id="zoomLevel">100%</span>
+      <button id="zoomInBtn">Zoom +</button>
       
-      const { error: uploadError } = await db.storage.from('pdfs').upload(fileName, currentAyatFile);
-      if(uploadError) throw uploadError;
+      <div class="page-nav">
+        <input type="number" id="pageInput" min="1" placeholder="Page" />
+        <span>of <span id="totalPagesDisplay">0</span></span>
+        <button id="goToPageBtn">Go</button>
+      </div>
 
-      const { data: urlData } = db.storage.from('pdfs').getPublicUrl(fileName);
+      <a id="downloadBtn" href="#" target="_blank" download class="btn-download">⬇ Download</a>
+      <button id="closeViewer">✕</button>
+    </div>
+  </div>
+  <div class="viewer-body" id="viewerBody">
+    <div id="pdfContainer"></div>
+  </div>
+</div>
 
-      const { error: dbError } = await db.from('ayats').insert({
-        surah_id: currentSurahId,
-        ayat_number: num,
-        name: pdfName, 
-        file_url: urlData.publicUrl
-      });
-      if(dbError) throw dbError;
-
-      ayatModal.classList.remove('active');
-      ayatNumber.value = ''; currentAyatFile = null; selectedFileName.textContent = '';
-      loadAyats();
-    } catch(err) {
-      alert('Upload failed: ' + err.message);
-    } finally {
-      saveAyat.textContent = 'Upload'; saveAyat.disabled = false;
-    }
-  };
-
-  // --- EDGE-STYLE CONTINUOUS VIEWER WITH PAGE TRACKING ---
-  async function openViewer(url, title) {
-    viewer.classList.add('active');
-    viewerTitle.textContent = title;
-    downloadBtn.href = url; 
-    pdfContainer.innerHTML = ''; 
-    currentScale = 1.2;
-    updateZoomDisplay();
-
-    const res = await fetch(url);
-    const buffer = await res.arrayBuffer();
-    const pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
-    totalPages = pdfDoc.numPages;
-    totalPagesDisplay.textContent = totalPages;
-    pageInput.value = 1;
-    pageInput.max = totalPages;
-
-    // Disconnect old observer if exists
-    if (observer) observer.disconnect();
-
-    // Render ALL pages continuously
-    for (let i = 1; i <= totalPages; i++) {
-      const page = await pdfDoc.getPage(i);
-      const viewport = page.getViewport({ scale: currentScale });
-      const canvas = document.createElement('canvas');
-      canvas.id = `page-canvas-${i}`; // Add ID for scrolling
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      const context = canvas.getContext('2d');
-      await page.render({ canvasContext: context, viewport: viewport }).promise;
-      pdfContainer.appendChild(canvas);
-    }
-    applyZoom();
-
-    // Setup Intersection Observer to track current page while scrolling
-    const options = { root: viewerBody, threshold: 0.5 };
-    observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const pageNum = parseInt(entry.target.id.replace('page-canvas-', ''));
-          pageInput.value = pageNum;
-        }
-      });
-    }, options);
-
-    document.querySelectorAll('#pdfContainer canvas').forEach(canvas => {
-      observer.observe(canvas);
-    });
-  }
-
-  function updateZoomDisplay() {
-    zoomLevel.textContent = Math.round(currentScale * 100) + '%';
-  }
-
-  function applyZoom() {
-    pdfContainer.style.transform = `scale(${currentScale})`;
-  }
-
-  zoomInBtn.onclick = () => { currentScale += 0.2; updateZoomDisplay(); applyZoom(); };
-  zoomOutBtn.onclick = () => { if(currentScale > 0.4) { currentScale -= 0.2; updateZoomDisplay(); applyZoom(); } };
-  closeViewer.onclick = () => { viewer.classList.remove('active'); if(observer) observer.disconnect(); };
-
-  // --- NEW: GO TO PAGE FUNCTIONALITY ---
-  function goToPage() {
-    let targetPage = parseInt(pageInput.value);
-    if (isNaN(targetPage) || targetPage < 1) targetPage = 1;
-    if (targetPage > totalPages) targetPage = totalPages;
-    
-    pageInput.value = targetPage;
-    const targetCanvas = document.getElementById(`page-canvas-${targetPage}`);
-    if (targetCanvas) {
-      targetCanvas.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }
-
-  goToPageBtn.onclick = goToPage;
-  pageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') goToPage();
-  });
-
-  updateAdminUI();
-});
+<script src="app.js"></script>
+</body>
+</html>
