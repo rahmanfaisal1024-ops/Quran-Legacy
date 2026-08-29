@@ -16,7 +16,15 @@
 
 <header class="header">
   <div class="logo"><span class="logo-icon">📖</span><h1>Ayat <span class="gradient-text">Library</span></h1></div>
-  <button class="upload-btn" id="createSurahBtn"><span class="plus">+</span> New Surah Folder</button>
+  <div class="header-controls">
+    <select id="themeSelect">
+      <option value="dark">🌙 Dark</option>
+      <option value="light">️ Light</option>
+      <option value="gold">✨ Gold</option>
+    </select>
+    <button class="admin-btn" id="adminBtn">🔒 Admin</button>
+    <button class="upload-btn" id="createSurahBtn" style="display:none;"><span class="plus">+</span> New Surah</button>
+  </div>
 </header>
 
 <main class="grid-container" id="surahGrid"></main>
@@ -24,25 +32,23 @@
 <div class="empty-state" id="emptyState">
   <div class="empty-icon">📂</div>
   <h2>No Surahs yet</h2>
-  <p>Click "New Surah Folder" to start!</p>
+  <p>Admin: Click "New Surah" to start!</p>
 </div>
 
-<!-- Modal: Create Surah Folder -->
+<!-- Modal: Create Surah -->
 <div class="modal" id="surahModal">
   <div class="modal-content">
     <h2>Create Surah Folder</h2>
-    <label>Surah Name</label>
-    <input type="text" id="surahName" placeholder="e.g. Al-Baqarah" />
-    <label>Surah Number</label>
-    <input type="text" id="surahNumber" placeholder="e.g. 2" />
+    <label>Surah Name</label><input type="text" id="surahName" placeholder="e.g. Al-Baqarah" />
+    <label>Surah Number</label><input type="text" id="surahNumber" placeholder="e.g. 2" />
     <div class="modal-actions">
       <button class="btn-cancel" id="cancelSurah">Cancel</button>
-      <button class="btn-save" id="saveSurah">Create Folder</button>
+      <button class="btn-save" id="saveSurah">Create</button>
     </div>
   </div>
 </div>
 
-<!-- Modal: Inside Surah Folder (Ayat List) -->
+<!-- Modal: Inside Folder -->
 <div class="modal" id="folderModal">
   <div class="modal-content large-modal">
     <div class="modal-header">
@@ -50,18 +56,17 @@
       <button class="close-btn" id="closeFolder">✕</button>
     </div>
     <div class="folder-actions">
-      <button class="upload-btn small" id="uploadAyatBtn"><span class="plus">+</span> Upload Ayat PDF</button>
+      <button class="upload-btn small" id="uploadAyatBtn" style="display:none;"><span class="plus">+</span> Upload Ayat PDF</button>
     </div>
     <div class="ayat-grid" id="ayatGrid"></div>
   </div>
 </div>
 
-<!-- Modal: Upload Ayat PDF -->
+<!-- Modal: Upload Ayat -->
 <div class="modal" id="ayatModal">
   <div class="modal-content">
     <h2>Upload Ayat PDF</h2>
-    <label>Ayat Number</label>
-    <input type="number" id="ayatNumber" placeholder="e.g. 1" />
+    <label>Ayat Number</label><input type="number" id="ayatNumber" placeholder="e.g. 1" />
     <input type="file" id="ayatFileInput" accept="application/pdf" hidden />
     <button class="btn-save" id="selectFileBtn" style="width:100%; margin-top:10px;">Select PDF File</button>
     <p id="selectedFileName" style="color:#aaa; margin-top:10px; text-align:center;"></p>
@@ -77,7 +82,11 @@
   <div class="viewer-header">
     <h2 id="viewerTitle">Ayat Viewer</h2>
     <div class="viewer-controls">
-      <button id="zoomOut">−</button><button id="zoomIn">+</button><button id="closeViewer">✕</button>
+      <button id="prevPage">◀ Prev</button>
+      <span id="pageInfo">1 / 1</span>
+      <button id="nextPage">Next ▶</button>
+      <a id="downloadBtn" href="#" target="_blank" download class="btn-download">⬇ Download</a>
+      <button id="closeViewer">✕</button>
     </div>
   </div>
   <div class="viewer-body"><canvas id="pdfCanvas"></canvas></div>
