@@ -1,9 +1,8 @@
 // ============================================
 // SUPABASE CONFIGURATION - REPLACE THESE!
 // ============================================
-const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co';
-const SUPABASE_KEY = 'YOUR-ANON-KEY-HERE';
-
+const SUPABASE_URL = 'https://fkeyxtulzphwbhtizpcj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_lzcafnJtTDB23vWC1QXEsw_xzC7xzoz';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 pdfjsLib.GlobalWorkerOptions.workerSrc =
