@@ -29,7 +29,7 @@ body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overfl
 
 .upload-btn { padding: 10px 20px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; color: #fff; border-radius: 30px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
 .upload-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-.upload-btn.small { padding: 8px 16px; font-size: 0.9rem; }
+.upload-btn.small, .btn-save.small { padding: 8px 16px; font-size: 0.9rem; }
 .plus { font-size: 1.2rem; font-weight: bold; }
 
 .grid-container { position: relative; z-index: 2; display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 60px 40px; perspective: 1000px; }
@@ -74,7 +74,7 @@ body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overfl
 .btn-cancel { background: rgba(255,255,255,0.1); color: var(--text); }
 .btn-save { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; }
 
-.folder-actions { text-align: center; margin-bottom: 20px; }
+.folder-actions { text-align: center; margin-bottom: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .ayat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; }
 .ayat-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s; }
 .ayat-card:hover { background: rgba(102,126,234,0.2); border-color: var(--primary); transform: scale(1.05); }
@@ -84,12 +84,12 @@ body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overfl
 .viewer { display: none; position: fixed; inset: 0; background: #2b2b2b; z-index: 200; flex-direction: column; }
 .viewer.active { display: flex; }
 .viewer-header { padding: 15px 25px; background: #1a1a1a; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; color: #fff; border-bottom: 1px solid #444; }
-.viewer-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.viewer-controls button, .btn-download { padding: 8px 14px; background: #333; border: 1px solid #555; color: #fff; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 0.9rem; transition: background 0.2s; }
+.viewer-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; flex: 1; }
+.viewer-controls button, .btn-download { padding: 8px 14px; background: #333; border: 1px solid #555; color: #fff; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 0.9rem; transition: background 0.2s; white-space: nowrap; }
 .viewer-controls button:hover, .btn-download:hover { background: var(--primary); border-color: var(--primary); }
 #zoomLevel { padding: 0 10px; font-weight: bold; min-width: 50px; text-align: center; }
 
-.page-nav { display: flex; align-items: center; gap: 5px; background: #333; padding: 4px 8px; border-radius: 6px; border: 1px solid #555; }
+.page-nav { display: flex; align-items: center; gap: 6px; background: #333; padding: 6px 10px; border-radius: 6px; border: 1px solid #555; }
 #pageInput { width: 50px; padding: 6px; background: #222; border: 1px solid #555; color: #fff; border-radius: 4px; text-align: center; font-size: 0.9rem; }
 #pageInput:focus { outline: none; border-color: var(--primary); }
 .page-nav span { font-size: 0.9rem; color: #ccc; }
