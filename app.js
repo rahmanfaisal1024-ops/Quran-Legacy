@@ -1,64 +1,58 @@
-// ============================================
-// CONFIGURATION
-// ============================================
 var SUPABASE_URL = 'https://fkeyxtulzphwbhtizpcj.supabase.co';
 var SUPABASE_KEY = 'sb_publishable_lzcafnJtTDB23vWC1QXEsw_xzC7xzoz';
 var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-const ADMIN_PASSWORD = "admin123"; 
+var ADMIN_PASSWORD = "admin123"; 
 
 window.addEventListener('load', function() {
-  // Elements
-  const surahGrid = document.getElementById('surahGrid');
-  const emptyState = document.getElementById('emptyState');
-  const createSurahBtn = document.getElementById('createSurahBtn');
-  const adminBtn = document.getElementById('adminBtn');
-  const themeSelect = document.getElementById('themeSelect');
+  var surahGrid = document.getElementById('surahGrid');
+  var emptyState = document.getElementById('emptyState');
+  var createSurahBtn = document.getElementById('createSurahBtn');
+  var adminBtn = document.getElementById('adminBtn');
+  var themeSelect = document.getElementById('themeSelect');
   
-  const surahModal = document.getElementById('surahModal');
-  const surahName = document.getElementById('surahName');
-  const surahNumber = document.getElementById('surahNumber');
-  const saveSurah = document.getElementById('saveSurah');
-  const cancelSurah = document.getElementById('cancelSurah');
+  var surahModal = document.getElementById('surahModal');
+  var surahName = document.getElementById('surahName');
+  var surahNumber = document.getElementById('surahNumber');
+  var saveSurah = document.getElementById('saveSurah');
+  var cancelSurah = document.getElementById('cancelSurah');
 
-  const folderModal = document.getElementById('folderModal');
-  const folderTitle = document.getElementById('folderTitle');
-  const closeFolder = document.getElementById('closeFolder');
-  const uploadAyatBtn = document.getElementById('uploadAyatBtn');
-  const ayatGrid = document.getElementById('ayatGrid');
+  var folderModal = document.getElementById('folderModal');
+  var folderTitle = document.getElementById('folderTitle');
+  var closeFolder = document.getElementById('closeFolder');
+  var uploadAyatBtn = document.getElementById('uploadAyatBtn');
+  var ayatGrid = document.getElementById('ayatGrid');
 
-  const ayatModal = document.getElementById('ayatModal');
-  const ayatNumber = document.getElementById('ayatNumber');
-  const ayatFileInput = document.getElementById('ayatFileInput');
-  const selectFileBtn = document.getElementById('selectFileBtn');
-  const selectedFileName = document.getElementById('selectedFileName');
-  const saveAyat = document.getElementById('saveAyat');
-  const cancelAyat = document.getElementById('cancelAyat');
+  var ayatModal = document.getElementById('ayatModal');
+  var ayatNumber = document.getElementById('ayatNumber');
+  var ayatFileInput = document.getElementById('ayatFileInput');
+  var selectFileBtn = document.getElementById('selectFileBtn');
+  var selectedFileName = document.getElementById('selectedFileName');
+  var saveAyat = document.getElementById('saveAyat');
+  var cancelAyat = document.getElementById('cancelAyat');
 
-  const viewer = document.getElementById('viewer');
-  const viewerTitle = document.getElementById('viewerTitle');
-  const pdfContainer = document.getElementById('pdfContainer');
-  const viewerBody = document.getElementById('viewerBody');
-  const zoomInBtn = document.getElementById('zoomInBtn');
-  const zoomOutBtn = document.getElementById('zoomOutBtn');
-  const zoomLevel = document.getElementById('zoomLevel');
-  const downloadBtn = document.getElementById('downloadBtn');
-  const closeViewer = document.getElementById('closeViewer');
+  var viewer = document.getElementById('viewer');
+  var viewerTitle = document.getElementById('viewerTitle');
+  var pdfContainer = document.getElementById('pdfContainer');
+  var viewerBody = document.getElementById('viewerBody');
+  var zoomInBtn = document.getElementById('zoomInBtn');
+  var zoomOutBtn = document.getElementById('zoomOutBtn');
+  var zoomLevel = document.getElementById('zoomLevel');
+  var downloadBtn = document.getElementById('downloadBtn');
+  var closeViewer = document.getElementById('closeViewer');
   
-  // Page Navigation Elements
-  const pageInput = document.getElementById('pageInput');
-  const totalPagesDisplay = document.getElementById('totalPagesDisplay');
-  const goToPageBtn = document.getElementById('goToPageBtn');
+  var pageInput = document.getElementById('pageInput');
+  var totalPagesDisplay = document.getElementById('totalPagesDisplay');
+  var goToPageBtn = document.getElementById('goToPageBtn');
 
-  let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
-  let currentSurahId = null;
-  let currentAyatFile = null;
-  let currentScale = 1.2;
-  let totalPages = 0;
-  let observer = null;
+  var isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+  var currentSurahId = null;
+  var currentAyatFile = null;
+  var currentScale = 1.2;
+  var totalPages = 0;
+  var observer = null;
 
-  // --- ADMIN & THEME ---
   function updateAdminUI() {
     createSurahBtn.style.display = isAdmin ? 'flex' : 'none';
     uploadAyatBtn.style.display = isAdmin ? 'inline-flex' : 'none';
@@ -66,12 +60,12 @@ window.addEventListener('load', function() {
     loadSurahs(); 
   }
 
-  adminBtn.onclick = () => {
+  adminBtn.onclick = function() {
     if(isAdmin) {
       isAdmin = false;
       sessionStorage.removeItem('isAdmin');
     } else {
-      let pass = prompt("Enter Admin Password:");
+      var pass = prompt("Enter Admin Password:");
       if(pass === ADMIN_PASSWORD) {
         isAdmin = true;
         sessionStorage.setItem('isAdmin', 'true');
@@ -82,120 +76,136 @@ window.addEventListener('load', function() {
     updateAdminUI();
   };
 
-  themeSelect.onchange = (e) => { document.body.className = e.target.value; };
+  themeSelect.onchange = function(e) { 
+    document.body.className = e.target.value; 
+  };
 
-  // --- LOAD SURAHS ---
   async function loadSurahs() {
-    const { data, error } = await db.from('surahs').select('*').order('number', { ascending: true });
+    var result = await db.from('surahs').select('*').order('number', { ascending: true });
+    var data = result.data;
+    var error = result.error;
     if (error) return console.error(error);
     
     surahGrid.innerHTML = '';
     emptyState.style.display = data.length ? 'none' : 'block';
 
-    data.forEach(surah => {
-      const card = document.createElement('div');
+    for (var i = 0; i < data.length; i++) {
+      var surah = data[i];
+      var card = document.createElement('div');
       card.className = 'folder-card';
-      card.innerHTML = `
-        ${isAdmin ? `<button class="delete-btn" data-id="${surah.id}">🗑</button>` : ''}
-        <div class="folder-icon">📁</div>
-        <h3>${surah.name}</h3>
-        <p>Surah #${surah.number || '?'}</p>
-      `;
-      card.onclick = (e) => {
+      
+      var deleteBtnHtml = isAdmin ? '<button class="delete-btn" data-id="' + surah.id + '">🗑</button>' : '';
+      card.innerHTML = deleteBtnHtml + 
+        '<div class="folder-icon">📁</div>' +
+        '<h3>' + surah.name + '</h3>' +
+        '<p>Surah #' + (surah.number || '?') + '</p>';
+        
+      card.onclick = function(e) {
         if(e.target.classList.contains('delete-btn')) return;
         openFolder(surah);
       };
+      
       if(isAdmin) {
-        card.querySelector('.delete-btn').onclick = async (e) => {
+        var btn = card.querySelector('.delete-btn');
+        btn.onclick = function(e) {
           e.stopPropagation();
-          if(confirm(`Delete ${surah.name} and all its Ayats?`)) {
-            await db.from('surahs').delete().eq('id', surah.id);
-            await db.from('ayats').delete().eq('surah_id', surah.id);
-            loadSurahs();
+          var s = surah;
+          if(confirm('Delete ' + s.name + ' and all its Ayats?')) {
+            db.from('surahs').delete().eq('id', s.id).then(function() {
+              db.from('ayats').delete().eq('surah_id', s.id).then(function() {
+                loadSurahs();
+              });
+            });
           }
         };
       }
       surahGrid.appendChild(card);
-    });
+    }
   }
 
-  createSurahBtn.onclick = () => surahModal.classList.add('active');
-  cancelSurah.onclick = () => surahModal.classList.remove('active');
-  saveSurah.onclick = async () => {
-    const name = surahName.value.trim();
-    const number = surahNumber.value.trim();
+  createSurahBtn.onclick = function() { surahModal.classList.add('active'); };
+  cancelSurah.onclick = function() { surahModal.classList.remove('active'); };
+  
+  saveSurah.onclick = async function() {
+    var name = surahName.value.trim();
+    var number = surahNumber.value.trim();
     if(!name) return alert('Please enter a Surah name');
-    await db.from('surahs').insert({ name, number });
+    await db.from('surahs').insert({ name: name, number: number });
     surahModal.classList.remove('active');
-    surahName.value = ''; surahNumber.value = '';
+    surahName.value = ''; 
+    surahNumber.value = '';
     loadSurahs();
   };
 
   async function openFolder(surah) {
     currentSurahId = surah.id;
-    folderTitle.textContent = `Surah ${surah.name}`;
+    folderTitle.textContent = 'Surah ' + surah.name;
     folderModal.classList.add('active');
     loadAyats();
   }
-  closeFolder.onclick = () => folderModal.classList.remove('active');
+  
+  closeFolder.onclick = function() { folderModal.classList.remove('active'); };
 
   async function loadAyats() {
-    const { data, error } = await db.from('ayats').select('*').eq('surah_id', currentSurahId).order('ayat_number', { ascending: true });
+    var result = await db.from('ayats').select('*').eq('surah_id', currentSurahId).order('ayat_number', { ascending: true });
+    var data = result.data;
+    var error = result.error;
     if (error) return console.error(error);
 
     ayatGrid.innerHTML = '';
-    if(!data.length) {
+    if(!data || data.length === 0) {
       ayatGrid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.7;">No Ayats uploaded yet.</p>';
+      return;
     }
 
-    data.forEach(ayat => {
-      const card = document.createElement('div');
+    for (var i = 0; i < data.length; i++) {
+      var ayat = data[i];
+      var card = document.createElement('div');
       card.className = 'ayat-card';
-      card.innerHTML = `
-        <div class="ayat-num">${ayat.ayat_number}</div>
-        <div class="ayat-label">${ayat.name}</div>
-      `;
-      card.onclick = () => openViewer(ayat.file_url, ayat.name);
+      card.innerHTML = '<div class="ayat-num">' + ayat.ayat_number + '</div>' +
+                       '<div class="ayat-label">' + ayat.name + '</div>';
+      card.onclick = function() { openViewer(ayat.file_url, ayat.name); };
       ayatGrid.appendChild(card);
-    });
+    }
   }
 
-  uploadAyatBtn.onclick = () => ayatModal.classList.add('active');
-  cancelAyat.onclick = () => { 
+  uploadAyatBtn.onclick = function() { ayatModal.classList.add('active'); };
+  cancelAyat.onclick = function() { 
     ayatModal.classList.remove('active'); 
     currentAyatFile = null; 
     selectedFileName.textContent = ''; 
   };
   
-  selectFileBtn.onclick = () => ayatFileInput.click();
-  ayatFileInput.onchange = (e) => {
+  selectFileBtn.onclick = function() { ayatFileInput.click(); };
+  ayatFileInput.onchange = function(e) {
     currentAyatFile = e.target.files[0];
-    if(currentAyatFile) selectedFileName.textContent = `Selected: ${currentAyatFile.name}`;
+    if(currentAyatFile) selectedFileName.textContent = 'Selected: ' + currentAyatFile.name;
   };
 
-  saveAyat.onclick = async () => {
-    const num = parseInt(ayatNumber.value);
+  saveAyat.onclick = async function() {
+    var num = parseInt(ayatNumber.value);
     if(!num || !currentAyatFile) return alert('Please enter Ayat number and select a PDF file');
     
     saveAyat.textContent = 'Uploading...';
     saveAyat.disabled = true;
 
     try {
-      const pdfName = currentAyatFile.name.replace(/\.pdf$/i, '');
-      const fileName = `surah_${currentSurahId}_ayat_${num}_${Date.now()}.pdf`;
+      var pdfName = currentAyatFile.name.replace(/\.pdf$/i, '');
+      var fileName = 'surah_' + currentSurahId + '_ayat_' + num + '_' + Date.now() + '.pdf';
       
-      const { error: uploadError } = await db.storage.from('pdfs').upload(fileName, currentAyatFile);
-      if(uploadError) throw uploadError;
+      var uploadResult = await db.storage.from('pdfs').upload(fileName, currentAyatFile);
+      if(uploadResult.error) throw uploadResult.error;
 
-      const { data: urlData } = db.storage.from('pdfs').getPublicUrl(fileName);
+      var urlResult = db.storage.from('pdfs').getPublicUrl(fileName);
+      var fileUrl = urlResult.data.publicUrl;
 
-      const { error: dbError } = await db.from('ayats').insert({
+      var dbResult = await db.from('ayats').insert({
         surah_id: currentSurahId,
         ayat_number: num,
         name: pdfName, 
-        file_url: urlData.publicUrl
+        file_url: fileUrl
       });
-      if(dbError) throw dbError;
+      if(dbResult.error) throw dbResult.error;
 
       ayatModal.classList.remove('active');
       ayatNumber.value = ''; 
@@ -210,7 +220,6 @@ window.addEventListener('load', function() {
     }
   };
 
-  // --- EDGE-STYLE CONTINUOUS VIEWER WITH PAGE TRACKING ---
   async function openViewer(url, title) {
     viewer.classList.add('active');
     viewerTitle.textContent = title;
@@ -219,9 +228,9 @@ window.addEventListener('load', function() {
     currentScale = 1.2;
     updateZoomDisplay();
 
-    const res = await fetch(url);
-    const buffer = await res.arrayBuffer();
-    const pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+    var res = await fetch(url);
+    var buffer = await res.arrayBuffer();
+    var pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
     totalPages = pdfDoc.numPages;
     totalPagesDisplay.textContent = totalPages;
     pageInput.value = 1;
@@ -229,32 +238,34 @@ window.addEventListener('load', function() {
 
     if (observer) observer.disconnect();
 
-    for (let i = 1; i <= totalPages; i++) {
-      const page = await pdfDoc.getPage(i);
-      const viewport = page.getViewport({ scale: currentScale });
-      const canvas = document.createElement('canvas');
-      canvas.id = `page-canvas-${i}`;
+    for (var i = 1; i <= totalPages; i++) {
+      var page = await pdfDoc.getPage(i);
+      var viewport = page.getViewport({ scale: currentScale });
+      var canvas = document.createElement('canvas');
+      canvas.id = 'page-canvas-' + i;
       canvas.width = viewport.width;
       canvas.height = viewport.height;
-      const context = canvas.getContext('2d');
+      var context = canvas.getContext('2d');
       await page.render({ canvasContext: context, viewport: viewport }).promise;
       pdfContainer.appendChild(canvas);
     }
     applyZoom();
 
-    const options = { root: viewerBody, threshold: 0.5 };
-    observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
+    var options = { root: viewerBody, threshold: 0.5 };
+    observer = new IntersectionObserver(function(entries) {
+      for (var j = 0; j < entries.length; j++) {
+        var entry = entries[j];
         if (entry.isIntersecting) {
-          const pageNum = parseInt(entry.target.id.replace('page-canvas-', ''));
+          var pageNum = parseInt(entry.target.id.replace('page-canvas-', ''));
           pageInput.value = pageNum;
         }
-      });
+      }
     }, options);
 
-    document.querySelectorAll('#pdfContainer canvas').forEach(canvas => {
-      observer.observe(canvas);
-    });
+    var canvases = document.querySelectorAll('#pdfContainer canvas');
+    for (var k = 0; k < canvases.length; k++) {
+      observer.observe(canvases[k]);
+    }
   }
 
   function updateZoomDisplay() {
@@ -262,27 +273,27 @@ window.addEventListener('load', function() {
   }
 
   function applyZoom() {
-    pdfContainer.style.transform = `scale(${currentScale})`;
+    pdfContainer.style.transform = 'scale(' + currentScale + ')';
   }
 
-  zoomInBtn.onclick = () => { currentScale += 0.2; updateZoomDisplay(); applyZoom(); };
-  zoomOutBtn.onclick = () => { if(currentScale > 0.4) { currentScale -= 0.2; updateZoomDisplay(); applyZoom(); } };
-  closeViewer.onclick = () => { viewer.classList.remove('active'); if(observer) observer.disconnect(); };
+  zoomInBtn.onclick = function() { currentScale += 0.2; updateZoomDisplay(); applyZoom(); };
+  zoomOutBtn.onclick = function() { if(currentScale > 0.4) { currentScale -= 0.2; updateZoomDisplay(); applyZoom(); } };
+  closeViewer.onclick = function() { viewer.classList.remove('active'); if(observer) observer.disconnect(); };
 
   function goToPage() {
-    let targetPage = parseInt(pageInput.value);
+    var targetPage = parseInt(pageInput.value);
     if (isNaN(targetPage) || targetPage < 1) targetPage = 1;
     if (targetPage > totalPages) targetPage = totalPages;
     
     pageInput.value = targetPage;
-    const targetCanvas = document.getElementById(`page-canvas-${targetPage}`);
+    var targetCanvas = document.getElementById('page-canvas-' + targetPage);
     if (targetCanvas) {
       targetCanvas.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 
   goToPageBtn.onclick = goToPage;
-  pageInput.addEventListener('keypress', (e) => {
+  pageInput.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') goToPage();
   });
 
