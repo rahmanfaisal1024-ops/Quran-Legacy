@@ -6,7 +6,7 @@ var SUPABASE_KEY = 'sb_publishable_lzcafnJtTDB23vWC1QXEsw_xzC7xzoz';
 var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-const ADMIN_PASSWORD = "admin123"; // Change this if you want!
+const ADMIN_PASSWORD = "admin123"; 
 
 window.addEventListener('load', function() {
   // Elements
@@ -38,26 +38,24 @@ window.addEventListener('load', function() {
 
   const viewer = document.getElementById('viewer');
   const viewerTitle = document.getElementById('viewerTitle');
-  const pdfCanvas = document.getElementById('pdfCanvas');
-  const prevPageBtn = document.getElementById('prevPage');
-  const nextPageBtn = document.getElementById('nextPage');
-  const pageInfo = document.getElementById('pageInfo');
+  const pdfContainer = document.getElementById('pdfContainer');
+  const zoomInBtn = document.getElementById('zoomInBtn');
+  const zoomOutBtn = document.getElementById('zoomOutBtn');
+  const zoomLevel = document.getElementById('zoomLevel');
   const downloadBtn = document.getElementById('downloadBtn');
   const closeViewer = document.getElementById('closeViewer');
 
   let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
   let currentSurahId = null;
   let currentAyatFile = null;
-  
-  // Viewer State
-  let pdfDoc = null, currentPage = 1, totalPages = 0, currentScale = 1.2, currentAyatUrl = '';
+  let currentScale = 1.2;
 
   // --- ADMIN & THEME ---
   function updateAdminUI() {
     createSurahBtn.style.display = isAdmin ? 'flex' : 'none';
     uploadAyatBtn.style.display = isAdmin ? 'inline-flex' : 'none';
     adminBtn.textContent = isAdmin ? '🔓 Admin (Logout)' : '🔒 Admin';
-    loadSurahs(); // Reload to show/hide delete buttons
+    loadSurahs(); 
   }
 
   adminBtn.onclick = () => {
@@ -76,9 +74,7 @@ window.addEventListener('load', function() {
     updateAdminUI();
   };
 
-  themeSelect.onchange = (e) => {
-    document.body.className = e.target.value;
-  };
+  themeSelect.onchange = (e) => { document.body.className = e.target.value; };
 
   // --- LOAD SURAHS ---
   async function loadSurahs() {
@@ -93,7 +89,7 @@ window.addEventListener('load', function() {
       card.className = 'folder-card';
       card.innerHTML = `
         ${isAdmin ? `<button class="delete-btn" data-id="${surah.id}">🗑</button>` : ''}
-        <div class="folder-icon"></div>
+        <div class="folder-icon">📁</div>
         <h3>${surah.name}</h3>
         <p>Surah #${surah.number || '?'}</p>
       `;
@@ -115,7 +111,6 @@ window.addEventListener('load', function() {
     });
   }
 
-  // --- CREATE SURAH ---
   createSurahBtn.onclick = () => surahModal.classList.add('active');
   cancelSurah.onclick = () => surahModal.classList.remove('active');
   saveSurah.onclick = async () => {
@@ -128,7 +123,6 @@ window.addEventListener('load', function() {
     loadSurahs();
   };
 
-  // --- OPEN FOLDER ---
   async function openFolder(surah) {
     currentSurahId = surah.id;
     folderTitle.textContent = `Surah ${surah.name}`;
@@ -153,7 +147,6 @@ window.addEventListener('load', function() {
     });
   }
 
-  // --- UPLOAD AYAT ---
   uploadAyatBtn.onclick = () => ayatModal.classList.add('active');
   cancelAyat.onclick = () => { ayatModal.classList.remove('active'); currentAyatFile = null; selectedFileName.textContent = ''; };
   
@@ -171,7 +164,6 @@ window.addEventListener('load', function() {
     saveAyat.disabled = true;
 
     try {
-      // Use the actual file name (without .pdf) as the Ayat name
       const pdfName = currentAyatFile.name.replace(/\.pdf$/i, '');
       const fileName = `surah_${currentSurahId}_ayat_${num}_${Date.now()}.pdf`;
       
@@ -183,7 +175,7 @@ window.addEventListener('load', function() {
       const { error: dbError } = await db.from('ayats').insert({
         surah_id: currentSurahId,
         ayat_number: num,
-        name: pdfName, // Using file name here!
+        name: pdfName, 
         file_url: urlData.publicUrl
       });
       if(dbError) throw dbError;
@@ -198,33 +190,44 @@ window.addEventListener('load', function() {
     }
   };
 
-  // --- PDF VIEWER WITH NAVIGATION ---
+  // --- EDGE-STYLE CONTINUOUS VIEWER ---
   async function openViewer(url, title) {
     viewer.classList.add('active');
     viewerTitle.textContent = title;
-    currentAyatUrl = url;
-    downloadBtn.href = url; // Set download link
-    
+    downloadBtn.href = url; 
+    pdfContainer.innerHTML = ''; 
+    currentScale = 1.2;
+    updateZoomDisplay();
+
     const res = await fetch(url);
     const buffer = await res.arrayBuffer();
-    pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
-    totalPages = pdfDoc.numPages;
-    currentPage = 1;
-    renderPage();
+    const pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+
+    // Render ALL pages continuously
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+      const page = await pdfDoc.getPage(i);
+      const viewport = page.getViewport({ scale: currentScale });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const context = canvas.getContext('2d');
+      await page.render({ canvasContext: context, viewport: viewport }).promise;
+      pdfContainer.appendChild(canvas);
+    }
+    applyZoom();
   }
 
-  async function renderPage() {
-    const page = await pdfDoc.getPage(currentPage);
-    const viewport = page.getViewport({ scale: currentScale });
-    pdfCanvas.width = viewport.width; pdfCanvas.height = viewport.height;
-    await page.render({ canvasContext: pdfCanvas.getContext('2d'), viewport }).promise;
-    pageInfo.textContent = `${currentPage} / ${totalPages}`;
+  function updateZoomDisplay() {
+    zoomLevel.textContent = Math.round(currentScale * 100) + '%';
   }
 
-  prevPageBtn.onclick = () => { if(currentPage > 1) { currentPage--; renderPage(); } };
-  nextPageBtn.onclick = () => { if(currentPage < totalPages) { currentPage++; renderPage(); } };
+  function applyZoom() {
+    pdfContainer.style.transform = `scale(${currentScale})`;
+  }
+
+  zoomInBtn.onclick = () => { currentScale += 0.2; updateZoomDisplay(); applyZoom(); };
+  zoomOutBtn.onclick = () => { if(currentScale > 0.4) { currentScale -= 0.2; updateZoomDisplay(); applyZoom(); } };
   closeViewer.onclick = () => viewer.classList.remove('active');
 
-  // Init
   updateAdminUI();
 });
