@@ -22,6 +22,7 @@ window.addEventListener('load', function() {
   var folderTitle = document.getElementById('folderTitle');
   var closeFolder = document.getElementById('closeFolder');
   var uploadAyatBtn = document.getElementById('uploadAyatBtn');
+  var downloadAllBtn = document.getElementById('downloadAllBtn');
   var ayatGrid = document.getElementById('ayatGrid');
 
   var ayatModal = document.getElementById('ayatModal');
@@ -52,11 +53,12 @@ window.addEventListener('load', function() {
   var currentScale = 1.2;
   var totalPages = 0;
   var observer = null;
+  var isViewerLoading = false;
 
   function updateAdminUI() {
     createSurahBtn.style.display = isAdmin ? 'flex' : 'none';
     uploadAyatBtn.style.display = isAdmin ? 'inline-flex' : 'none';
-    adminBtn.textContent = isAdmin ? '🔓 Admin (Logout)' : '🔒 Admin';
+    adminBtn.textContent = isAdmin ? '🔓 Admin (Logout)' : ' Admin';
     loadSurahs(); 
   }
 
@@ -76,9 +78,7 @@ window.addEventListener('load', function() {
     updateAdminUI();
   };
 
-  themeSelect.onchange = function(e) { 
-    document.body.className = e.target.value; 
-  };
+  themeSelect.onchange = function(e) { document.body.className = e.target.value; };
 
   async function loadSurahs() {
     var result = await db.from('surahs').select('*').order('number', { ascending: true });
@@ -112,9 +112,7 @@ window.addEventListener('load', function() {
           var s = surah;
           if(confirm('Delete ' + s.name + ' and all its Ayats?')) {
             db.from('surahs').delete().eq('id', s.id).then(function() {
-              db.from('ayats').delete().eq('surah_id', s.id).then(function() {
-                loadSurahs();
-              });
+              db.from('ayats').delete().eq('surah_id', s.id).then(function() { loadSurahs(); });
             });
           }
         };
@@ -132,8 +130,7 @@ window.addEventListener('load', function() {
     if(!name) return alert('Please enter a Surah name');
     await db.from('surahs').insert({ name: name, number: number });
     surahModal.classList.remove('active');
-    surahName.value = ''; 
-    surahNumber.value = '';
+    surahName.value = ''; surahNumber.value = '';
     loadSurahs();
   };
 
@@ -143,7 +140,6 @@ window.addEventListener('load', function() {
     folderModal.classList.add('active');
     loadAyats();
   }
-  
   closeFolder.onclick = function() { folderModal.classList.remove('active'); };
 
   async function loadAyats() {
@@ -169,11 +165,41 @@ window.addEventListener('load', function() {
     }
   }
 
+  // --- DOWNLOAD WHOLE SURAH AS ZIP ---
+  downloadAllBtn.onclick = async function() {
+    downloadAllBtn.textContent = 'Zipping...';
+    downloadAllBtn.disabled = true;
+    
+    try {
+      var result = await db.from('ayats').select('name, file_url').eq('surah_id', currentSurahId).order('ayat_number', { ascending: true });
+      var ayats = result.data;
+      
+      if (!ayats || ayats.length === 0) { alert('No Ayats to download.'); return; }
+
+      var zip = new JSZip();
+      var folderName = folderTitle.textContent.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      var folder = zip.folder(folderName);
+
+      for (var i = 0; i < ayats.length; i++) {
+        var ayat = ayats[i];
+        var res = await fetch(ayat.file_url);
+        var blob = await res.blob();
+        folder.file(ayat.name + '.pdf', blob);
+      }
+
+      var content = await zip.generateAsync({ type: 'blob' });
+      saveAs(content, folderName + '_complete.zip');
+    } catch (err) {
+      alert('Failed to download all: ' + err.message);
+    } finally {
+      downloadAllBtn.textContent = '⬇ Download All (ZIP)';
+      downloadAllBtn.disabled = false;
+    }
+  };
+
   uploadAyatBtn.onclick = function() { ayatModal.classList.add('active'); };
   cancelAyat.onclick = function() { 
-    ayatModal.classList.remove('active'); 
-    currentAyatFile = null; 
-    selectedFileName.textContent = ''; 
+    ayatModal.classList.remove('active'); currentAyatFile = null; selectedFileName.textContent = ''; 
   };
   
   selectFileBtn.onclick = function() { ayatFileInput.click(); };
@@ -186,8 +212,7 @@ window.addEventListener('load', function() {
     var num = parseInt(ayatNumber.value);
     if(!num || !currentAyatFile) return alert('Please enter Ayat number and select a PDF file');
     
-    saveAyat.textContent = 'Uploading...';
-    saveAyat.disabled = true;
+    saveAyat.textContent = 'Uploading...'; saveAyat.disabled = true;
 
     try {
       var pdfName = currentAyatFile.name.replace(/\.pdf$/i, '');
@@ -199,103 +224,95 @@ window.addEventListener('load', function() {
       var urlResult = db.storage.from('pdfs').getPublicUrl(fileName);
       var fileUrl = urlResult.data.publicUrl;
 
-      var dbResult = await db.from('ayats').insert({
-        surah_id: currentSurahId,
-        ayat_number: num,
-        name: pdfName, 
-        file_url: fileUrl
-      });
+      var dbResult = await db.from('ayats').insert({ surah_id: currentSurahId, ayat_number: num, name: pdfName, file_url: fileUrl });
       if(dbResult.error) throw dbResult.error;
 
-      ayatModal.classList.remove('active');
-      ayatNumber.value = ''; 
-      currentAyatFile = null; 
-      selectedFileName.textContent = '';
+      ayatModal.classList.remove('active'); ayatNumber.value = ''; currentAyatFile = null; selectedFileName.textContent = '';
       loadAyats();
-    } catch(err) {
-      alert('Upload failed: ' + err.message);
-    } finally {
-      saveAyat.textContent = 'Upload'; 
-      saveAyat.disabled = false;
-    }
+    } catch(err) { alert('Upload failed: ' + err.message); }
+    finally { saveAyat.textContent = 'Upload'; saveAyat.disabled = false; }
   };
 
+  // --- FIXED PDF VIEWER ---
   async function openViewer(url, title) {
+    if (isViewerLoading) return; 
+    isViewerLoading = true;
+    
     viewer.classList.add('active');
     viewerTitle.textContent = title;
     downloadBtn.href = url; 
+    
+    // INSTANTLY clear to prevent double pages
     pdfContainer.innerHTML = ''; 
     currentScale = 1.2;
     updateZoomDisplay();
 
-    var res = await fetch(url);
-    var buffer = await res.arrayBuffer();
-    var pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
-    totalPages = pdfDoc.numPages;
-    totalPagesDisplay.textContent = totalPages;
-    pageInput.value = 1;
-    pageInput.max = totalPages;
+    try {
+      var res = await fetch(url);
+      var buffer = await res.arrayBuffer();
+      var pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+      
+      if (!viewer.classList.contains('active')) { isViewerLoading = false; return; }
 
-    if (observer) observer.disconnect();
+      totalPages = pdfDoc.numPages;
+      totalPagesDisplay.textContent = totalPages;
+      pageInput.value = 1; pageInput.max = totalPages;
 
-    for (var i = 1; i <= totalPages; i++) {
-      var page = await pdfDoc.getPage(i);
-      var viewport = page.getViewport({ scale: currentScale });
-      var canvas = document.createElement('canvas');
-      canvas.id = 'page-canvas-' + i;
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      var context = canvas.getContext('2d');
-      await page.render({ canvasContext: context, viewport: viewport }).promise;
-      pdfContainer.appendChild(canvas);
-    }
-    applyZoom();
+      if (observer) { observer.disconnect(); observer = null; }
 
-    var options = { root: viewerBody, threshold: 0.5 };
-    observer = new IntersectionObserver(function(entries) {
-      for (var j = 0; j < entries.length; j++) {
-        var entry = entries[j];
-        if (entry.isIntersecting) {
-          var pageNum = parseInt(entry.target.id.replace('page-canvas-', ''));
-          pageInput.value = pageNum;
-        }
+      for (var i = 1; i <= totalPages; i++) {
+        var page = await pdfDoc.getPage(i);
+        var viewport = page.getViewport({ scale: currentScale });
+        var canvas = document.createElement('canvas');
+        canvas.id = 'page-canvas-' + i;
+        canvas.width = viewport.width; canvas.height = viewport.height;
+        var context = canvas.getContext('2d');
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+        pdfContainer.appendChild(canvas);
       }
-    }, options);
+      applyZoom();
 
-    var canvases = document.querySelectorAll('#pdfContainer canvas');
-    for (var k = 0; k < canvases.length; k++) {
-      observer.observe(canvases[k]);
-    }
+      var options = { root: viewerBody, threshold: 0.5 };
+      observer = new IntersectionObserver(function(entries) {
+        for (var j = 0; j < entries.length; j++) {
+          var entry = entries[j];
+          if (entry.isIntersecting) {
+            var pageNum = parseInt(entry.target.id.replace('page-canvas-', ''));
+            pageInput.value = pageNum;
+          }
+        }
+      }, options);
+
+      var canvases = document.querySelectorAll('#pdfContainer canvas');
+      for (var k = 0; k < canvases.length; k++) { observer.observe(canvases[k]); }
+    } catch (err) { console.error("Error loading PDF:", err); }
+    finally { isViewerLoading = false; }
   }
 
-  function updateZoomDisplay() {
-    zoomLevel.textContent = Math.round(currentScale * 100) + '%';
-  }
-
-  function applyZoom() {
-    pdfContainer.style.transform = 'scale(' + currentScale + ')';
-  }
+  function updateZoomDisplay() { zoomLevel.textContent = Math.round(currentScale * 100) + '%'; }
+  function applyZoom() { pdfContainer.style.transform = 'scale(' + currentScale + ')'; }
 
   zoomInBtn.onclick = function() { currentScale += 0.2; updateZoomDisplay(); applyZoom(); };
   zoomOutBtn.onclick = function() { if(currentScale > 0.4) { currentScale -= 0.2; updateZoomDisplay(); applyZoom(); } };
-  closeViewer.onclick = function() { viewer.classList.remove('active'); if(observer) observer.disconnect(); };
+  
+  closeViewer.onclick = function() { 
+    viewer.classList.remove('active'); 
+    isViewerLoading = false; 
+    if(observer) { observer.disconnect(); observer = null; }
+    pdfContainer.innerHTML = ''; 
+  };
 
   function goToPage() {
     var targetPage = parseInt(pageInput.value);
     if (isNaN(targetPage) || targetPage < 1) targetPage = 1;
     if (targetPage > totalPages) targetPage = totalPages;
-    
     pageInput.value = targetPage;
     var targetCanvas = document.getElementById('page-canvas-' + targetPage);
-    if (targetCanvas) {
-      targetCanvas.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    if (targetCanvas) { targetCanvas.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   }
 
   goToPageBtn.onclick = goToPage;
-  pageInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') goToPage();
-  });
+  pageInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') goToPage(); });
 
   updateAdminUI();
 });
