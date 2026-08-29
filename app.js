@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateAdminUI() {
     createSurahBtn.style.display = isAdmin ? 'flex' : 'none';
     uploadAyatBtn.style.display = isAdmin ? 'inline-flex' : 'none';
-    adminBtn.textContent = isAdmin ? '🔓 Admin (Logout)' : ' Admin';
+    adminBtn.textContent = isAdmin ? '🔓 Admin (Logout)' : '🔒 Admin';
     loadSurahs(); 
   }
 
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var result = await db.from('surahs').select('*').order('number', { ascending: true });
     var data = result.data; var error = result.error;
     
-    mainLoader.style.display = 'none'; // Hide loader instantly when data arrives
+    if(mainLoader) mainLoader.style.display = 'none';
 
     if (error) { console.error(error); return; }
     
@@ -147,13 +147,11 @@ document.addEventListener('DOMContentLoaded', function() {
       var card = document.createElement('div');
       card.className = 'ayat-card';
       card.innerHTML = '<div class="ayat-num">' + ayat.ayat_number + '</div><div class="ayat-label">' + ayat.name + '</div>';
-      // DIRECT CLICK - NO MONKEY DELAY
       card.onclick = function() { openViewer(ayat.file_url, ayat.name); };
       ayatGrid.appendChild(card);
     }
   }
 
-  // INSTANT PDF VIEWER WITH LAZY LOADING
   async function openViewer(url, title) {
     if (isViewerLoading) return;
     isViewerLoading = true;
@@ -240,10 +238,47 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       saveAs(await zip.generateAsync({ type: 'blob' }), folderName + '_complete.zip');
     } catch (err) { alert('Failed: ' + err.message); }
-    finally { downloadAllBtn.textContent = ' Download All (ZIP)'; downloadAllBtn.disabled = false; }
+    finally { downloadAllBtn.textContent = '⬇ Download All (ZIP)'; downloadAllBtn.disabled = false; }
   };
 
   uploadAyatBtn.onclick = function() { ayatModal.classList.add('active'); };
   cancelAyat.onclick = function() { ayatModal.classList.remove('active'); currentAyatFile = null; selectedFileName.textContent = ''; };
   selectFileBtn.onclick = function() { ayatFileInput.click(); };
-  ayatFileInput.onchange =
+  ayatFileInput.onchange = function(e) { currentAyatFile = e.target.files[0]; if(currentAyatFile) selectedFileName.textContent = 'Selected: ' + currentAyatFile.name; };
+  saveAyat.onclick = async function() {
+    var num = parseInt(ayatNumber.value);
+    if(!num || !currentAyatFile) return alert('Please enter Ayat number and select a PDF file');
+    saveAyat.textContent = 'Uploading...'; saveAyat.disabled = true;
+    try {
+      var pdfName = currentAyatFile.name.replace(/\.pdf$/i, '');
+      var fileName = 'surah_' + currentSurahId + '_ayat_' + num + '_' + Date.now() + '.pdf';
+      var uploadResult = await db.storage.from('pdfs').upload(fileName, currentAyatFile);
+      if(uploadResult.error) throw uploadResult.error;
+      var urlResult = db.storage.from('pdfs').getPublicUrl(fileName);
+      var dbResult = await db.from('ayats').insert({ surah_id: currentSurahId, ayat_number: num, name: pdfName, file_url: urlResult.data.publicUrl });
+      if(dbResult.error) throw dbResult.error;
+      ayatModal.classList.remove('active'); ayatNumber.value = ''; currentAyatFile = null; selectedFileName.textContent = '';
+      loadAyats();
+    } catch(err) { alert('Upload failed: ' + err.message); }
+    finally { saveAyat.textContent = 'Upload'; saveAyat.disabled = false; }
+  };
+
+  function updateZoomDisplay() { zoomLevel.textContent = Math.round(currentScale * 100) + '%'; }
+  function applyZoom() { pdfContainer.style.transform = 'scale(' + currentScale + ')'; }
+  zoomInBtn.onclick = function() { currentScale += 0.2; updateZoomDisplay(); applyZoom(); };
+  zoomOutBtn.onclick = function() { if(currentScale > 0.4) { currentScale -= 0.2; updateZoomDisplay(); applyZoom(); } };
+  closeViewer.onclick = function() { viewer.classList.remove('active'); if(observer) { observer.disconnect(); observer = null; } };
+  
+  function goToPage() {
+    var targetPage = parseInt(pageInput.value);
+    if (isNaN(targetPage) || targetPage < 1) targetPage = 1;
+    if (targetPage > totalPages) targetPage = totalPages;
+    pageInput.value = targetPage;
+    var targetCanvas = document.getElementById('page-canvas-' + targetPage);
+    if (targetCanvas) { targetCanvas.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  }
+  goToPageBtn.onclick = goToPage;
+  pageInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') goToPage(); });
+
+  updateAdminUI();
+});
