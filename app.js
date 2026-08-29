@@ -70,7 +70,6 @@ window.addEventListener('load', function() {
     backBtn.style.display = 'inline-block';
     document.getElementById('folderTitle').textContent = 'Surah ' + surah.name;
     
-    // INSTANT FEEDBACK: Show spinner immediately so user doesn't go back
     ayatGrid.innerHTML = '<div class="loader"></div>';
     ayatEmptyState.style.display = 'none';
     
@@ -140,7 +139,7 @@ window.addEventListener('load', function() {
     var data = result.data; var error = result.error;
     if (error) return console.error(error);
 
-    ayatGrid.innerHTML = ''; // Clear spinner
+    ayatGrid.innerHTML = ''; 
     ayatEmptyState.style.display = (!data || data.length === 0) ? 'block' : 'none';
 
     for (var i = 0; i < data.length; i++) {
@@ -153,39 +152,43 @@ window.addEventListener('load', function() {
     }
   }
 
+  // --- THE RUNNING MONKEY LOGIC ---
   async function runMonkeyAndOpenPDF(url, title, cardElement) {
     if (isViewerLoading) return;
     isViewerLoading = true;
 
-    monkey.style.display = 'block';
-    monkey.style.transition = 'none';
-    monkey.style.left = '5%';
-    monkey.style.top = '90%';
-    monkey.style.transform = 'scale(1) rotate(0deg)';
-    void monkey.offsetWidth;
-
+    // 1. Calculate target position (center of clicked card)
     var rect = cardElement.getBoundingClientRect();
-    var targetX = rect.left + (rect.width / 2) - 32;
-    var targetY = rect.top + (rect.height / 2) - 32;
+    var targetX = rect.left + (rect.width / 2) - 35; // 35 is half monkey width
+    var targetY = rect.top + (rect.height / 2) - 35;
 
+    // 2. Start PDF loading in background immediately
     var pdfPromise = preparePDF(url, title);
 
-    var animDuration = 1200;
-    monkey.style.transition = 'all ' + animDuration + 'ms cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    // 3. Make monkey run to the target
+    monkey.style.transition = 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
     monkey.style.left = targetX + 'px';
     monkey.style.top = targetY + 'px';
-    monkey.style.transform = 'scale(1.5) rotate(360deg)';
+    monkey.style.bottom = 'auto';
+    monkey.style.right = 'auto';
+    monkey.style.animation = 'none'; // Stop idle breathing while running
 
-    var animPromise = new Promise(function(resolve) { setTimeout(resolve, animDuration); });
-
+    // 4. Wait for BOTH the monkey to arrive AND the PDF to load
+    var animPromise = new Promise(function(resolve) { setTimeout(resolve, 1200); });
     await Promise.all([pdfPromise, animPromise]);
 
-    monkey.style.display = 'none';
+    // 5. PDF is ready! Send monkey back to idle corner
+    monkey.style.transition = 'all 0.8s ease-in-out';
+    monkey.style.left = 'auto';
+    monkey.style.top = 'auto';
+    monkey.style.bottom = '20px';
+    monkey.style.right = '20px';
+    monkey.style.animation = 'idleBreathe 2s infinite ease-in-out'; // Resume breathing
+
     isViewerLoading = false;
   }
 
   async function preparePDF(url, title) {
-    // 1. OPEN VIEWER INSTANTLY WITH LOADER
     viewer.classList.add('active');
     viewerTitle.textContent = title;
     downloadBtn.href = url;
@@ -193,7 +196,6 @@ window.addEventListener('load', function() {
     currentScale = 1.2;
     updateZoomDisplay();
 
-    // 2. FETCH PDF
     var res = await fetch(url);
     var buffer = await res.arrayBuffer();
     var pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
@@ -203,10 +205,8 @@ window.addEventListener('load', function() {
     pageInput.max = totalPages;
     totalPagesDisplay.textContent = totalPages;
 
-    // 3. CLEAR LOADER
     pdfContainer.innerHTML = '';
 
-    // 4. CREATE CANVASES (LAZY LOADING)
     var canvasesData = [];
     for (var i = 1; i <= totalPages; i++) {
       var page = await pdfDoc.getPage(i);
@@ -223,7 +223,6 @@ window.addEventListener('load', function() {
 
     applyZoom();
 
-    // 5. LAZY RENDER OBSERVER
     if (observer) observer.disconnect();
 
     observer = new IntersectionObserver(function(entries) {
