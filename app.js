@@ -1,8 +1,10 @@
-// SAFE CONFIGURATION - NO CONFLICTS
-var MY_SUPABASE_URL = 'https://fkeyxtulzphwbhtizpcj.supabase.co';
-var MY_SUPABASE_KEY = 'sb_publishable_lzcafnJtTDB23vWC1QXEsw_xzC7xzoz';
-var db = window.supabase.createClient(MY_SUPABASE_URL, MY_SUPABASE_KEY);
+// ============================================
+// SUPABASE CONFIGURATION - KEEP YOUR KEYS HERE!
+// ============================================
+var SUPABASE_URL = 'https://fkeyxtulzphwbhtizpcj.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_lzcafnJtTDB23vWC1QXEsw_xzC7xzoz';
 
+var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 window.addEventListener('load', function() {
@@ -16,6 +18,12 @@ window.addEventListener('load', function() {
   const surahName = document.getElementById('surahName');
   const surahNumber = document.getElementById('surahNumber');
   const searchInput = document.getElementById('searchInput');
+  
+  const subfolderModal = document.getElementById('subfolderModal');
+  const subfolderTitle = document.getElementById('subfolderTitle');
+  const ayatGrid = document.getElementById('ayatGrid');
+  const closeSubfolder = document.getElementById('closeSubfolder');
+
   const viewer = document.getElementById('viewer');
   const viewerTitle = document.getElementById('viewerTitle');
   const pdfCanvas = document.getElementById('pdfCanvas');
@@ -27,7 +35,7 @@ window.addEventListener('load', function() {
   const pageInfo = document.getElementById('pageInfo');
   const thumbStrip = document.getElementById('thumbStrip');
 
-  let pendingFile = null, currentPdf = null, currentPage = 1, currentScale = 1.3, totalPages = 0;
+  let pendingFile = null, currentPdf = null, currentPage = 1, currentScale = 1.3, totalPages = 0, currentSurahData = null;
 
   async function generateThumbnail(file) {
     const buffer = await file.arrayBuffer();
@@ -54,12 +62,52 @@ window.addEventListener('load', function() {
         card.className = 'folder-card';
         card.style.animationDelay = `${idx * 0.08}s`;
         card.innerHTML = `<button class="delete-btn" data-id="${item.id}" title="Delete">🗑</button><div class="folder-thumb"><img src="${item.thumbnail_url}" alt="${item.name}" /></div><div class="folder-info"><h3>${item.name}</h3><p>${item.pages} pages${item.number ? ' • #' + item.number : ''}</p></div>`;
-        card.addEventListener('click', e => { if (!e.target.classList.contains('delete-btn')) openViewer(item); });
-        card.querySelector('.delete-btn').addEventListener('click', async e => { e.stopPropagation(); if (confirm(`Delete "${item.name}"?`)) await deletePdf(item); });
+        
+        // Click card -> Open Subfolder (Ayat List)
+        card.addEventListener('click', e => { 
+          if (!e.target.classList.contains('delete-btn')) openSubfolder(item); 
+        });
+        
+        card.querySelector('.delete-btn').addEventListener('click', async e => { 
+          e.stopPropagation(); 
+          if (confirm(`Delete "${item.name}"?`)) await deletePdf(item); 
+        });
         grid.appendChild(card);
       });
     } catch (error) { console.error('Error loading library:', error); }
   }
+
+  // NEW: Open Subfolder showing all Ayats
+  async function openSubfolder(item) {
+    currentSurahData = item;
+    subfolderTitle.textContent = item.name;
+    ayatGrid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Loading Ayats...</p>';
+    subfolderModal.classList.add('active');
+
+    try {
+      const response = await fetch(item.file_url);
+      const buffer = await response.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+      const numPages = pdf.numPages;
+      
+      ayatGrid.innerHTML = '';
+      for (let i = 1; i <= numPages; i++) {
+        const ayatItem = document.createElement('div');
+        ayatItem.className = 'ayat-item';
+        ayatItem.style.animationDelay = `${i * 0.02}s`;
+        ayatItem.innerHTML = `<div class="ayat-num">${i}</div><div class="ayat-label">Ayat / Page</div>`;
+        ayatItem.onclick = () => {
+          subfolderModal.classList.remove('active');
+          openViewer(item, i);
+        };
+        ayatGrid.appendChild(ayatItem);
+      }
+    } catch (error) {
+      ayatGrid.innerHTML = '<p style="color:red;">Error loading pages.</p>';
+    }
+  }
+
+  closeSubfolder.onclick = () => subfolderModal.classList.remove('active');
 
   uploadBtn.onclick = () => fileInput.click();
   fileInput.onchange = e => {
@@ -119,16 +167,19 @@ window.addEventListener('load', function() {
     document.querySelectorAll('.folder-card').forEach(card => { card.style.display = card.querySelector('h3').textContent.toLowerCase().includes(q) ? '' : 'none'; });
   };
 
-  async function openViewer(item) {
+  async function openViewer(item, startPage = 1) {
     viewer.classList.add('active');
-    viewerTitle.textContent = item.name;
+    viewerTitle.textContent = `${item.name} - Page ${startPage}`;
     try {
       const response = await fetch(item.file_url);
       const buffer = await response.arrayBuffer();
       currentPdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
-      totalPages = currentPdf.numPages; currentPage = 1; currentScale = 1.3;
-      pageInfo.textContent = `1 / ${totalPages}`;
-      await renderPage(); await buildThumbnails();
+      totalPages = currentPdf.numPages; 
+      currentPage = startPage; 
+      currentScale = 1.3;
+      pageInfo.textContent = `${currentPage} / ${totalPages}`;
+      await renderPage(); 
+      await buildThumbnails();
     } catch (error) { console.error('Error opening PDF:', error); viewer.classList.remove('active'); }
   }
 
@@ -139,6 +190,7 @@ window.addEventListener('load', function() {
     pdfCanvas.style.animation = 'none'; void pdfCanvas.offsetWidth; pdfCanvas.style.animation = 'slideIn 0.4s ease';
     await page.render({ canvasContext: pdfCanvas.getContext('2d'), viewport }).promise;
     pageInfo.textContent = `${currentPage} / ${totalPages}`;
+    viewerTitle.textContent = `${currentSurahData.name} - Page ${currentPage}`;
     document.querySelectorAll('.thumb-item').forEach((t, i) => { t.classList.toggle('active', i + 1 === currentPage); });
   }
 
@@ -148,7 +200,7 @@ window.addEventListener('load', function() {
       const page = await currentPdf.getPage(i); const vp = page.getViewport({ scale: 0.3 });
       const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
       await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
-      const wrap = document.createElement('div'); wrap.className = 'thumb-item' + (i === 1 ? ' active' : '');
+      const wrap = document.createElement('div'); wrap.className = 'thumb-item' + (i === currentPage ? ' active' : '');
       wrap.appendChild(c); wrap.onclick = () => { currentPage = i; renderPage(); };
       thumbStrip.appendChild(wrap);
     }
@@ -159,7 +211,7 @@ window.addEventListener('load', function() {
   zoomInBtn.onclick = () => { currentScale += 0.2; renderPage(); };
   zoomOutBtn.onclick = () => { if (currentScale > 0.5) { currentScale -= 0.2; renderPage(); } };
   closeViewer.onclick = () => { viewer.classList.remove('active'); currentPdf = null; };
-  document.addEventListener('keydown', e => { if (!viewer.classList.contains('active')) return; if (e.key === 'ArrowRight') nextBtn.click(); if (e.key === 'ArrowLeft') prevBtn.click(); if (e.key === 'Escape') closeViewer.click(); });
+  document.addEventListener('keydown', e => { if (!viewer.classList.contains('active')) return; if (e.key === 'ArrowRight') nextBtn.click(); if (e.key === 'ArrowLeft') prevBtn.click(); if (e.key === 'Escape') { closeViewer.click(); closeSubfolder.click(); } });
 
   loadLibrary();
 });
