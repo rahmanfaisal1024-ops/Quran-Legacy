@@ -4,7 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Quranlegacy</title>
-<link rel="stylesheet" href="styles.css?v=8" />
+<link rel="stylesheet" href="styles.css?v=9" />
+<!-- Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -16,8 +17,14 @@
   <div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div>
 </div>
 
-<!-- THE ALWAYS-VISIBLE RUNNING MONKEY -->
-<img id="monkey" src="https://media.tenor.com/On7kvXhzml4AAAAj/running-monkey.gif" alt="Running Monkey" />
+<!-- MAIN LOADER (Shows instantly) -->
+<div id="mainLoader" class="main-loader">
+  <div class="spinner"></div>
+  <p>Loading Quranlegacy...</p>
+</div>
+
+<!-- MONKEY (Source is empty so it loads in background) -->
+<img id="monkey" src="" alt="Running Monkey" />
 
 <header class="header">
   <div class="logo">
@@ -106,6 +113,6 @@
   </div>
 </div>
 
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>
