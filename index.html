@@ -4,24 +4,24 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Quranlegacy</title>
-<link rel="stylesheet" href="styles.css?v=5" />
-<!-- PDF and Supabase Libraries -->
+<link rel="stylesheet" href="styles.css?v=6" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- ZIP Download Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </head>
 <body>
 
 <div class="bg-animation">
-  <div class="circle c1"></div>
-  <div class="circle c2"></div>
-  <div class="circle c3"></div>
+  <div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div>
 </div>
+
+<!-- THE RUNNING MONKEY -->
+<div id="monkey">🐒</div>
 
 <header class="header">
   <div class="logo">
+    <button id="backBtn" style="display:none; margin-right:15px;">⬅ Back</button>
     <span class="logo-icon">📖</span>
     <h1>Quran<span class="gradient-text">legacy</span></h1>
   </div>
@@ -36,22 +36,36 @@
   </div>
 </header>
 
-<main class="grid-container" id="surahGrid"></main>
+<!-- MAIN VIEW: SURAHS -->
+<div id="surahView">
+  <main class="grid-container" id="surahGrid"></main>
+  <div class="empty-state" id="emptyState">
+    <div class="empty-icon"></div>
+    <h2>No Surahs yet</h2>
+    <p>Admin: Click "New Surah" to start!</p>
+  </div>
+</div>
 
-<div class="empty-state" id="emptyState">
-  <div class="empty-icon">📂</div>
-  <h2>No Surahs yet</h2>
-  <p>Admin: Click "New Surah" to start!</p>
+<!-- SUB VIEW: AYATS (Opens like main screen, not popup) -->
+<div id="ayatView" style="display:none;">
+  <div class="folder-actions" style="margin-top:20px;">
+    <button class="upload-btn small" id="uploadAyatBtn" style="display:none;"><span class="plus">+</span> Upload Ayat</button>
+    <button class="btn-save small" id="downloadAllBtn">⬇ Download All (ZIP)</button>
+  </div>
+  <main class="grid-container" id="ayatGrid"></main>
+  <div class="empty-state" id="ayatEmptyState" style="display:none;">
+    <div class="empty-icon">📄</div>
+    <h2>No Ayats yet</h2>
+    <p>Admin: Click "Upload Ayat" to add PDFs!</p>
+  </div>
 </div>
 
 <!-- Create Surah Modal -->
 <div class="modal" id="surahModal">
   <div class="modal-content">
     <h2>Create Surah Folder</h2>
-    <label>Surah Name</label>
-    <input type="text" id="surahName" placeholder="e.g. Al-Baqarah" />
-    <label>Surah Number</label>
-    <input type="text" id="surahNumber" placeholder="e.g. 2" />
+    <label>Surah Name</label><input type="text" id="surahName" placeholder="e.g. Al-Baqarah" />
+    <label>Surah Number</label><input type="text" id="surahNumber" placeholder="e.g. 2" />
     <div class="modal-actions">
       <button class="btn-cancel" id="cancelSurah">Cancel</button>
       <button class="btn-save" id="saveSurah">Create</button>
@@ -59,27 +73,11 @@
   </div>
 </div>
 
-<!-- Folder Contents Modal -->
-<div class="modal" id="folderModal">
-  <div class="modal-content large-modal">
-    <div class="modal-header">
-      <h2 id="folderTitle">Surah Name</h2>
-      <button class="close-btn" id="closeFolder">✕</button>
-    </div>
-    <div class="folder-actions">
-      <button class="upload-btn small" id="uploadAyatBtn" style="display:none;"><span class="plus">+</span> Upload Ayat</button>
-      <button class="btn-save small" id="downloadAllBtn">⬇ Download All (ZIP)</button>
-    </div>
-    <div class="ayat-grid" id="ayatGrid"></div>
-  </div>
-</div>
-
 <!-- Upload Ayat Modal -->
 <div class="modal" id="ayatModal">
   <div class="modal-content">
     <h2>Upload Ayat PDF</h2>
-    <label>Ayat Number</label>
-    <input type="number" id="ayatNumber" placeholder="e.g. 1" />
+    <label>Ayat Number</label><input type="number" id="ayatNumber" placeholder="e.g. 1" />
     <input type="file" id="ayatFileInput" accept="application/pdf" hidden />
     <button class="btn-save" id="selectFileBtn" style="width:100%; margin-top:10px;">Select PDF File</button>
     <p id="selectedFileName" style="color:#aaa; margin-top:10px; text-align:center;"></p>
@@ -98,15 +96,13 @@
       <button id="zoomOutBtn">− Zoom</button>
       <span id="zoomLevel">100%</span>
       <button id="zoomInBtn">Zoom +</button>
-      
       <div class="page-nav">
         <span>Page</span>
         <input type="number" id="pageInput" min="1" placeholder="1" />
         <span>of <span id="totalPagesDisplay">0</span></span>
         <button id="goToPageBtn">Go</button>
       </div>
-
-      <a id="downloadBtn" href="#" target="_blank" download class="btn-download">⬇ Download</a>
+      <a id="downloadBtn" href="#" target="_blank" download class="btn-download"> Download</a>
       <button id="closeViewer">✕</button>
     </div>
   </div>
@@ -115,6 +111,6 @@
   </div>
 </div>
 
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>
