@@ -4,31 +4,29 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Quranlegacy</title>
-<link rel="stylesheet" href="styles.css?v=10" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<link rel="stylesheet" href="styles.css?v=11" />
+
+<!-- Scripts now have 'defer' so they don't block the site from showing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" defer></script>
 </head>
 <body>
 
-<div class="bg-animation">
-  <div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div>
-</div>
-
 <header class="header">
   <div class="logo">
-    <button id="backBtn" style="display:none; margin-right:15px;">⬅ Back</button>
-    <span class="logo-icon"></span>
+    <button id="backBtn" style="display:none; margin-right:15px;"> Back</button>
+    <span class="logo-icon">📖</span>
     <h1>Quran<span class="gradient-text">legacy</span></h1>
   </div>
   <div class="header-controls">
     <select id="themeSelect">
-      <option value="dark">🌙 Dark</option>
-      <option value="light">️ Light</option>
+      <option value="dark"> Dark</option>
+      <option value="light">☀️ Light</option>
       <option value="gold">✨ Gold</option>
     </select>
-    <button class="admin-btn" id="adminBtn"> Admin</button>
+    <button class="admin-btn" id="adminBtn">🔒 Admin</button>
     <button class="upload-btn" id="createSurahBtn" style="display:none;"><span class="plus">+</span> New Surah</button>
   </div>
 </header>
@@ -96,7 +94,7 @@
         <span>of <span id="totalPagesDisplay">0</span></span>
         <button id="goToPageBtn">Go</button>
       </div>
-      <a id="downloadBtn" href="#" target="_blank" download class="btn-download"> Download</a>
+      <a id="downloadBtn" href="#" target="_blank" download class="btn-download">⬇ Download</a>
       <button id="closeViewer">✕</button>
     </div>
   </div>
@@ -105,6 +103,6 @@
   </div>
 </div>
 
-<script src="app.js?v=10"></script>
+<script src="app.js?v=11" defer></script>
 </body>
 </html>
