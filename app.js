@@ -39,16 +39,24 @@ window.addEventListener('load', function() {
   const viewer = document.getElementById('viewer');
   const viewerTitle = document.getElementById('viewerTitle');
   const pdfContainer = document.getElementById('pdfContainer');
+  const viewerBody = document.getElementById('viewerBody');
   const zoomInBtn = document.getElementById('zoomInBtn');
   const zoomOutBtn = document.getElementById('zoomOutBtn');
   const zoomLevel = document.getElementById('zoomLevel');
   const downloadBtn = document.getElementById('downloadBtn');
   const closeViewer = document.getElementById('closeViewer');
+  
+  // Page Navigation Elements
+  const pageInput = document.getElementById('pageInput');
+  const totalPagesDisplay = document.getElementById('totalPagesDisplay');
+  const goToPageBtn = document.getElementById('goToPageBtn');
 
   let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
   let currentSurahId = null;
   let currentAyatFile = null;
   let currentScale = 1.2;
+  let totalPages = 0;
+  let observer = null;
 
   // --- ADMIN & THEME ---
   function updateAdminUI() {
@@ -136,19 +144,28 @@ window.addEventListener('load', function() {
     if (error) return console.error(error);
 
     ayatGrid.innerHTML = '';
-    if(!data.length) ayatGrid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.7;">No Ayats uploaded yet.</p>';
+    if(!data.length) {
+      ayatGrid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.7;">No Ayats uploaded yet.</p>';
+    }
 
     data.forEach(ayat => {
       const card = document.createElement('div');
       card.className = 'ayat-card';
-      card.innerHTML = `<div class="ayat-num">${ayat.ayat_number}</div><div class="ayat-label">${ayat.name}</div>`;
+      card.innerHTML = `
+        <div class="ayat-num">${ayat.ayat_number}</div>
+        <div class="ayat-label">${ayat.name}</div>
+      `;
       card.onclick = () => openViewer(ayat.file_url, ayat.name);
       ayatGrid.appendChild(card);
     });
   }
 
   uploadAyatBtn.onclick = () => ayatModal.classList.add('active');
-  cancelAyat.onclick = () => { ayatModal.classList.remove('active'); currentAyatFile = null; selectedFileName.textContent = ''; };
+  cancelAyat.onclick = () => { 
+    ayatModal.classList.remove('active'); 
+    currentAyatFile = null; 
+    selectedFileName.textContent = ''; 
+  };
   
   selectFileBtn.onclick = () => ayatFileInput.click();
   ayatFileInput.onchange = (e) => {
@@ -181,16 +198,19 @@ window.addEventListener('load', function() {
       if(dbError) throw dbError;
 
       ayatModal.classList.remove('active');
-      ayatNumber.value = ''; currentAyatFile = null; selectedFileName.textContent = '';
+      ayatNumber.value = ''; 
+      currentAyatFile = null; 
+      selectedFileName.textContent = '';
       loadAyats();
     } catch(err) {
       alert('Upload failed: ' + err.message);
     } finally {
-      saveAyat.textContent = 'Upload'; saveAyat.disabled = false;
+      saveAyat.textContent = 'Upload'; 
+      saveAyat.disabled = false;
     }
   };
 
-  // --- EDGE-STYLE CONTINUOUS VIEWER ---
+  // --- EDGE-STYLE CONTINUOUS VIEWER WITH PAGE TRACKING ---
   async function openViewer(url, title) {
     viewer.classList.add('active');
     viewerTitle.textContent = title;
@@ -202,12 +222,18 @@ window.addEventListener('load', function() {
     const res = await fetch(url);
     const buffer = await res.arrayBuffer();
     const pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+    totalPages = pdfDoc.numPages;
+    totalPagesDisplay.textContent = totalPages;
+    pageInput.value = 1;
+    pageInput.max = totalPages;
 
-    // Render ALL pages continuously
-    for (let i = 1; i <= pdfDoc.numPages; i++) {
+    if (observer) observer.disconnect();
+
+    for (let i = 1; i <= totalPages; i++) {
       const page = await pdfDoc.getPage(i);
       const viewport = page.getViewport({ scale: currentScale });
       const canvas = document.createElement('canvas');
+      canvas.id = `page-canvas-${i}`;
       canvas.width = viewport.width;
       canvas.height = viewport.height;
       const context = canvas.getContext('2d');
@@ -215,6 +241,20 @@ window.addEventListener('load', function() {
       pdfContainer.appendChild(canvas);
     }
     applyZoom();
+
+    const options = { root: viewerBody, threshold: 0.5 };
+    observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const pageNum = parseInt(entry.target.id.replace('page-canvas-', ''));
+          pageInput.value = pageNum;
+        }
+      });
+    }, options);
+
+    document.querySelectorAll('#pdfContainer canvas').forEach(canvas => {
+      observer.observe(canvas);
+    });
   }
 
   function updateZoomDisplay() {
@@ -227,7 +267,24 @@ window.addEventListener('load', function() {
 
   zoomInBtn.onclick = () => { currentScale += 0.2; updateZoomDisplay(); applyZoom(); };
   zoomOutBtn.onclick = () => { if(currentScale > 0.4) { currentScale -= 0.2; updateZoomDisplay(); applyZoom(); } };
-  closeViewer.onclick = () => viewer.classList.remove('active');
+  closeViewer.onclick = () => { viewer.classList.remove('active'); if(observer) observer.disconnect(); };
+
+  function goToPage() {
+    let targetPage = parseInt(pageInput.value);
+    if (isNaN(targetPage) || targetPage < 1) targetPage = 1;
+    if (targetPage > totalPages) targetPage = totalPages;
+    
+    pageInput.value = targetPage;
+    const targetCanvas = document.getElementById(`page-canvas-${targetPage}`);
+    if (targetCanvas) {
+      targetCanvas.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  goToPageBtn.onclick = goToPage;
+  pageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') goToPage();
+  });
 
   updateAdminUI();
 });
