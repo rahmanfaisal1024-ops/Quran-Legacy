@@ -4,9 +4,13 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Quranlegacy</title>
-<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="styles.css?v=5" />
+<!-- PDF and Supabase Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ZIP Download Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </head>
 <body>
 
@@ -27,7 +31,7 @@
       <option value="light">☀️ Light</option>
       <option value="gold">✨ Gold</option>
     </select>
-    <button class="admin-btn" id="adminBtn">🔒 Admin</button>
+    <button class="admin-btn" id="adminBtn"> Admin</button>
     <button class="upload-btn" id="createSurahBtn" style="display:none;"><span class="plus">+</span> New Surah</button>
   </div>
 </header>
@@ -40,7 +44,7 @@
   <p>Admin: Click "New Surah" to start!</p>
 </div>
 
-<!-- Modal: Create Surah -->
+<!-- Create Surah Modal -->
 <div class="modal" id="surahModal">
   <div class="modal-content">
     <h2>Create Surah Folder</h2>
@@ -55,7 +59,7 @@
   </div>
 </div>
 
-<!-- Modal: Inside Folder (Ayat List) -->
+<!-- Folder Contents Modal -->
 <div class="modal" id="folderModal">
   <div class="modal-content large-modal">
     <div class="modal-header">
@@ -63,13 +67,14 @@
       <button class="close-btn" id="closeFolder">✕</button>
     </div>
     <div class="folder-actions">
-      <button class="upload-btn small" id="uploadAyatBtn" style="display:none;"><span class="plus">+</span> Upload Ayat PDF</button>
+      <button class="upload-btn small" id="uploadAyatBtn" style="display:none;"><span class="plus">+</span> Upload Ayat</button>
+      <button class="btn-save small" id="downloadAllBtn">⬇ Download All (ZIP)</button>
     </div>
     <div class="ayat-grid" id="ayatGrid"></div>
   </div>
 </div>
 
-<!-- Modal: Upload Ayat -->
+<!-- Upload Ayat Modal -->
 <div class="modal" id="ayatModal">
   <div class="modal-content">
     <h2>Upload Ayat PDF</h2>
@@ -95,7 +100,8 @@
       <button id="zoomInBtn">Zoom +</button>
       
       <div class="page-nav">
-        <input type="number" id="pageInput" min="1" placeholder="Page" />
+        <span>Page</span>
+        <input type="number" id="pageInput" min="1" placeholder="1" />
         <span>of <span id="totalPagesDisplay">0</span></span>
         <button id="goToPageBtn">Go</button>
       </div>
@@ -109,6 +115,6 @@
   </div>
 </div>
 
-<script src="app.js"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
