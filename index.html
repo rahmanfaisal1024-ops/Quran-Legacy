@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Quranlegacy</title>
-<link rel="stylesheet" href="styles.css?v=6" />
+<link rel="stylesheet" href="styles.css?v=7" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -16,7 +16,6 @@
   <div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div>
 </div>
 
-<!-- THE RUNNING MONKEY -->
 <div id="monkey">🐒</div>
 
 <header class="header">
@@ -36,7 +35,6 @@
   </div>
 </header>
 
-<!-- MAIN VIEW: SURAHS -->
 <div id="surahView">
   <main class="grid-container" id="surahGrid"></main>
   <div class="empty-state" id="emptyState">
@@ -46,7 +44,6 @@
   </div>
 </div>
 
-<!-- SUB VIEW: AYATS (Opens like main screen, not popup) -->
 <div id="ayatView" style="display:none;">
   <div class="folder-actions" style="margin-top:20px;">
     <button class="upload-btn small" id="uploadAyatBtn" style="display:none;"><span class="plus">+</span> Upload Ayat</button>
@@ -60,7 +57,6 @@
   </div>
 </div>
 
-<!-- Create Surah Modal -->
 <div class="modal" id="surahModal">
   <div class="modal-content">
     <h2>Create Surah Folder</h2>
@@ -73,7 +69,6 @@
   </div>
 </div>
 
-<!-- Upload Ayat Modal -->
 <div class="modal" id="ayatModal">
   <div class="modal-content">
     <h2>Upload Ayat PDF</h2>
@@ -88,7 +83,6 @@
   </div>
 </div>
 
-<!-- PDF Viewer -->
 <div class="viewer" id="viewer">
   <div class="viewer-header">
     <h2 id="viewerTitle">Ayat Viewer</h2>
@@ -111,6 +105,6 @@
   </div>
 </div>
 
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>
