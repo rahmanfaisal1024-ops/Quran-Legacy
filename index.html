@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Ayat PDF Library</title>
+<title>Quranlegacy.com</title>
 <link rel="stylesheet" href="styles.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -15,11 +15,11 @@
 </div>
 
 <header class="header">
-  <div class="logo"><span class="logo-icon">📖</span><h1>Ayat <span class="gradient-text">Library</span></h1></div>
+  <div class="logo"><span class="logo-icon">📖</span><h1>Quran<span class="gradient-text">legacy.com</span></h1></div>
   <div class="header-controls">
     <select id="themeSelect">
       <option value="dark">🌙 Dark</option>
-      <option value="light">️ Light</option>
+      <option value="light">☀️ Light</option>
       <option value="gold">✨ Gold</option>
     </select>
     <button class="admin-btn" id="adminBtn">🔒 Admin</button>
@@ -77,19 +77,21 @@
   </div>
 </div>
 
-<!-- PDF Viewer -->
+<!-- PDF Viewer (Edge Style) -->
 <div class="viewer" id="viewer">
   <div class="viewer-header">
     <h2 id="viewerTitle">Ayat Viewer</h2>
     <div class="viewer-controls">
-      <button id="prevPage">◀ Prev</button>
-      <span id="pageInfo">1 / 1</span>
-      <button id="nextPage">Next ▶</button>
-      <a id="downloadBtn" href="#" target="_blank" download class="btn-download">⬇ Download</a>
+      <button id="zoomOutBtn">− Zoom Out</button>
+      <span id="zoomLevel">100%</span>
+      <button id="zoomInBtn">Zoom In +</button>
+      <a id="downloadBtn" href="#" target="_blank" download class="btn-download"> Download</a>
       <button id="closeViewer">✕</button>
     </div>
   </div>
-  <div class="viewer-body"><canvas id="pdfCanvas"></canvas></div>
+  <div class="viewer-body" id="viewerBody">
+    <div id="pdfContainer"></div>
+  </div>
 </div>
 
 <script src="app.js"></script>
