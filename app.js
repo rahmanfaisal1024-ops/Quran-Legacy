@@ -5,11 +5,17 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 
 var ADMIN_PASSWORD = "admin123"; 
 
-window.addEventListener('load', function() {
+// CHANGED: Use DOMContentLoaded instead of 'load' for instant UI rendering
+document.addEventListener('DOMContentLoaded', function() {
+  var mainLoader = document.getElementById('mainLoader');
+  var monkey = document.getElementById('monkey');
+  
+  // Load monkey image in background AFTER UI is visible
+  monkey.src = "https://media.tenor.com/On7kvXhzml4AAAAj/running-monkey.gif";
+
   var surahView = document.getElementById('surahView');
   var ayatView = document.getElementById('ayatView');
   var backBtn = document.getElementById('backBtn');
-  var monkey = document.getElementById('monkey');
 
   var surahGrid = document.getElementById('surahGrid');
   var emptyState = document.getElementById('emptyState');
@@ -69,10 +75,8 @@ window.addEventListener('load', function() {
     ayatView.style.display = 'block';
     backBtn.style.display = 'inline-block';
     document.getElementById('folderTitle').textContent = 'Surah ' + surah.name;
-    
     ayatGrid.innerHTML = '<div class="loader"></div>';
     ayatEmptyState.style.display = 'none';
-    
     loadAyats();
   }
 
@@ -99,7 +103,11 @@ window.addEventListener('load', function() {
   async function loadSurahs() {
     var result = await db.from('surahs').select('*').order('number', { ascending: true });
     var data = result.data; var error = result.error;
-    if (error) return console.error(error);
+    
+    // Hide main loader once data is fetched
+    if(mainLoader) mainLoader.classList.add('hidden');
+
+    if (error) { console.error(error); return; }
     
     surahGrid.innerHTML = '';
     emptyState.style.display = data.length ? 'none' : 'block';
@@ -152,38 +160,32 @@ window.addEventListener('load', function() {
     }
   }
 
-  // --- THE RUNNING MONKEY LOGIC ---
   async function runMonkeyAndOpenPDF(url, title, cardElement) {
     if (isViewerLoading) return;
     isViewerLoading = true;
 
-    // 1. Calculate target position (center of clicked card)
     var rect = cardElement.getBoundingClientRect();
-    var targetX = rect.left + (rect.width / 2) - 35; // 35 is half monkey width
+    var targetX = rect.left + (rect.width / 2) - 35;
     var targetY = rect.top + (rect.height / 2) - 35;
 
-    // 2. Start PDF loading in background immediately
     var pdfPromise = preparePDF(url, title);
 
-    // 3. Make monkey run to the target
     monkey.style.transition = 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
     monkey.style.left = targetX + 'px';
     monkey.style.top = targetY + 'px';
     monkey.style.bottom = 'auto';
     monkey.style.right = 'auto';
-    monkey.style.animation = 'none'; // Stop idle breathing while running
+    monkey.style.animation = 'none'; 
 
-    // 4. Wait for BOTH the monkey to arrive AND the PDF to load
     var animPromise = new Promise(function(resolve) { setTimeout(resolve, 1200); });
     await Promise.all([pdfPromise, animPromise]);
 
-    // 5. PDF is ready! Send monkey back to idle corner
     monkey.style.transition = 'all 0.8s ease-in-out';
     monkey.style.left = 'auto';
     monkey.style.top = 'auto';
     monkey.style.bottom = '20px';
     monkey.style.right = '20px';
-    monkey.style.animation = 'idleBreathe 2s infinite ease-in-out'; // Resume breathing
+    monkey.style.animation = 'idleBreathe 2s infinite ease-in-out'; 
 
     isViewerLoading = false;
   }
