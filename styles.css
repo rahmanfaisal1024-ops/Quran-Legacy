@@ -7,7 +7,6 @@ body.light { --bg-grad: linear-gradient(135deg, #f5f7fa, #c3cfe2); --text: #333;
 body.gold { --bg-grad: linear-gradient(135deg, #3e2b14, #6b4c1e, #3e2b14); --text: #ffd700; --card-bg: rgba(255,215,0,0.1); --card-border: rgba(255,215,0,0.3); --primary: #ffd700; --secondary: #b8860b; }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-/* FAST BACKGROUND: No heavy blur animations */
 body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overflow-x: hidden; transition: background 0.5s, color 0.5s; }
 
 .header { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--card-border); }
@@ -30,11 +29,31 @@ body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overfl
 
 .grid-container { position: relative; z-index: 2; display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 60px 40px; }
 
+/* --- FLOATING FOLDER ANIMATION --- */
+@keyframes floatFolder {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
 .folder-card, .ayat-card { 
   background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 30px; text-align: center; cursor: pointer; 
   backdrop-filter: blur(10px); transition: all 0.3s ease; position: relative; width: 200px;
+  /* Apply the floating animation */
+  animation: floatFolder 4s ease-in-out infinite;
 }
-.folder-card:hover, .ayat-card:hover { transform: translateY(-10px) scale(1.05); box-shadow: 0 15px 30px rgba(0,0,0,0.4); border-color: var(--primary); }
+
+/* Stagger the animations so they float organically, not all at once */
+.folder-card:nth-child(2n), .ayat-card:nth-child(2n) { animation-delay: 1s; }
+.folder-card:nth-child(3n), .ayat-card:nth-child(3n) { animation-delay: 2s; }
+.folder-card:nth-child(4n), .ayat-card:nth-child(4n) { animation-delay: 3s; }
+
+.folder-card:hover, .ayat-card:hover { 
+  animation-play-state: paused; /* Stops floating when you hover */
+  transform: translateY(-15px) scale(1.08); 
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5); 
+  border-color: var(--primary); 
+  z-index: 10;
+}
 
 .folder-icon, .ayat-num { font-size: 4rem; margin-bottom: 15px; color: var(--primary); font-weight: bold; }
 .folder-card h3 { font-size: 1.2rem; margin-bottom: 5px; }
