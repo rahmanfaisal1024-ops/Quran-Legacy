@@ -29,28 +29,32 @@ body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overfl
 
 .grid-container { position: relative; z-index: 2; display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 60px 40px; }
 
-/* --- FLOATING FOLDER ANIMATION --- */
+/* --- DRAMATIC FLOATING ANIMATION --- */
 @keyframes floatFolder {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+  0%, 100% { 
+    transform: translateY(0) scale(1); 
+  }
+  50% { 
+    transform: translateY(-30px) scale(1.03); 
+  }
 }
 
 .folder-card, .ayat-card { 
   background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 30px; text-align: center; cursor: pointer; 
   backdrop-filter: blur(10px); transition: all 0.3s ease; position: relative; width: 200px;
-  /* Apply the floating animation */
-  animation: floatFolder 4s ease-in-out infinite;
+  /* Slower duration (6s) for a majestic, zero-gravity feel */
+  animation: floatFolder 6s ease-in-out infinite;
 }
 
-/* Stagger the animations so they float organically, not all at once */
-.folder-card:nth-child(2n), .ayat-card:nth-child(2n) { animation-delay: 1s; }
-.folder-card:nth-child(3n), .ayat-card:nth-child(3n) { animation-delay: 2s; }
-.folder-card:nth-child(4n), .ayat-card:nth-child(4n) { animation-delay: 3s; }
+/* Stagger the animations so they float organically */
+.folder-card:nth-child(2n), .ayat-card:nth-child(2n) { animation-delay: 1.5s; }
+.folder-card:nth-child(3n), .ayat-card:nth-child(3n) { animation-delay: 3s; }
+.folder-card:nth-child(4n), .ayat-card:nth-child(4n) { animation-delay: 4.5s; }
 
 .folder-card:hover, .ayat-card:hover { 
   animation-play-state: paused; /* Stops floating when you hover */
-  transform: translateY(-15px) scale(1.08); 
-  box-shadow: 0 20px 40px rgba(0,0,0,0.5); 
+  transform: translateY(-15px) scale(1.1); 
+  box-shadow: 0 25px 50px rgba(102, 126, 234, 0.4); 
   border-color: var(--primary); 
   z-index: 10;
 }
