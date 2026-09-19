@@ -9,7 +9,7 @@ body.gold { --bg-grad: linear-gradient(135deg, #3e2b14, #6b4c1e, #3e2b14); --tex
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
 body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overflow-x: hidden; transition: background 0.5s, color 0.5s; }
 
-.header { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--card-border); }
+.header { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--card-border); flex-wrap: wrap; gap: 10px;}
 .logo { display: flex; align-items: center; gap: 12px; }
 .logo-icon { font-size: 2rem; }
 .logo h1 { font-size: 1.8rem; font-weight: 700; }
@@ -18,9 +18,10 @@ body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overfl
 #backBtn { background: none; border: 1px solid var(--card-border); color: var(--text); padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 1rem; transition: 0.3s; }
 #backBtn:hover { background: var(--primary); border-color: var(--primary); }
 
-.header-controls { display: flex; gap: 10px; align-items: center; }
+.header-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap;}
 #themeSelect { padding: 8px; border-radius: 20px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text); cursor: pointer; }
-.admin-btn { padding: 8px 16px; background: rgba(255,255,255,0.1); border: 1px solid var(--card-border); color: var(--text); border-radius: 20px; cursor: pointer; }
+.auth-btn, .admin-btn { padding: 8px 16px; background: rgba(255,255,255,0.1); border: 1px solid var(--card-border); color: var(--text); border-radius: 20px; cursor: pointer; transition: 0.3s;}
+.auth-btn:hover, .admin-btn:hover { background: var(--primary); }
 
 .upload-btn { padding: 10px 20px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; color: #fff; border-radius: 30px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
 .upload-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
@@ -29,58 +30,58 @@ body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overfl
 
 .grid-container { position: relative; z-index: 2; display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 60px 40px; }
 
-/* --- DRAMATIC FLOATING ANIMATION --- */
-@keyframes floatFolder {
-  0%, 100% { 
-    transform: translateY(0) scale(1); 
-  }
-  50% { 
-    transform: translateY(-30px) scale(1.03); 
-  }
-}
-
+@keyframes floatFolder { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-30px) scale(1.03); } }
 .folder-card, .ayat-card { 
   background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 30px; text-align: center; cursor: pointer; 
   backdrop-filter: blur(10px); transition: all 0.3s ease; position: relative; width: 200px;
-  /* Slower duration (6s) for a majestic, zero-gravity feel */
   animation: floatFolder 6s ease-in-out infinite;
 }
-
-/* Stagger the animations so they float organically */
 .folder-card:nth-child(2n), .ayat-card:nth-child(2n) { animation-delay: 1.5s; }
 .folder-card:nth-child(3n), .ayat-card:nth-child(3n) { animation-delay: 3s; }
-.folder-card:nth-child(4n), .ayat-card:nth-child(4n) { animation-delay: 4.5s; }
-
 .folder-card:hover, .ayat-card:hover { 
-  animation-play-state: paused; /* Stops floating when you hover */
-  transform: translateY(-15px) scale(1.1); 
-  box-shadow: 0 25px 50px rgba(102, 126, 234, 0.4); 
-  border-color: var(--primary); 
-  z-index: 10;
+  animation-play-state: paused; transform: translateY(-15px) scale(1.1); 
+  box-shadow: 0 25px 50px rgba(102, 126, 234, 0.4); border-color: var(--primary); z-index: 10;
 }
 
 .folder-icon, .ayat-num { font-size: 4rem; margin-bottom: 15px; color: var(--primary); font-weight: bold; }
 .folder-card h3 { font-size: 1.2rem; margin-bottom: 5px; }
-.folder-card p, .ayat-label { opacity: 0.7; font-size: 0.9rem; }
+.folder-card p, .ayat-label { opacity: 0.7; font-size: 0.9rem; margin-bottom: 10px;}
 .delete-btn { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,50,50,0.8); border: none; color: #fff; cursor: pointer; opacity: 0; transition: opacity 0.3s; }
 .folder-card:hover .delete-btn { opacity: 1; }
 
+.comment-btn { 
+  background: rgba(102, 126, 234, 0.2); border: 1px solid var(--primary); color: var(--primary); 
+  padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; cursor: pointer; margin-top: 5px; transition: 0.3s;
+}
+.comment-btn:hover { background: var(--primary); color: #fff; }
+
 .empty-state { text-align: center; padding: 60px 20px; position: relative; z-index: 2; }
 .empty-icon { font-size: 5rem; margin-bottom: 20px; }
-
 .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 50px auto; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
 .modal.active { display: flex; }
 .modal-content { background: var(--bg-grad); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; border: 1px solid var(--card-border); position: relative; color: var(--text); }
+.large-modal { max-width: 600px; }
+.close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; }
 .modal-content h2 { margin-bottom: 20px; text-align: center; }
 .modal-content label { display: block; margin: 15px 0 5px; opacity: 0.8; }
-.modal-content input { width: 100%; padding: 12px; background: rgba(255,255,255,0.08); border: 1px solid var(--card-border); border-radius: 10px; color: var(--text); font-size: 1rem; }
+.modal-content input, .modal-content textarea { width: 100%; padding: 12px; background: rgba(255,255,255,0.08); border: 1px solid var(--card-border); border-radius: 10px; color: var(--text); font-size: 1rem; margin-bottom: 10px;}
 .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
 .btn-cancel, .btn-save { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
 .btn-cancel { background: rgba(255,255,255,0.1); color: var(--text); }
 .btn-save { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; }
+.btn-google { width: 100%; padding: 12px; background: #fff; color: #333; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px;}
+
+.auth-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+.tab-btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: var(--text); border-radius: 10px; cursor: pointer; }
+.tab-btn.active { background: var(--primary); border-color: var(--primary); }
+
+.comment-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 10px; text-align: left; }
+.comment-email { font-size: 0.8rem; color: var(--primary); font-weight: bold; }
+.comment-text { font-size: 0.95rem; margin-top: 5px; }
+.comment-date { font-size: 0.7rem; color: #aaa; margin-top: 5px; }
 
 .folder-actions { text-align: center; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; z-index: 2; position: relative; }
 
@@ -91,13 +92,10 @@ body { min-height: 100vh; background: var(--bg-grad); color: var(--text); overfl
 .viewer-controls button, .btn-download { padding: 8px 14px; background: #333; border: 1px solid #555; color: #fff; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 0.9rem; transition: background 0.2s; white-space: nowrap; }
 .viewer-controls button:hover, .btn-download:hover { background: var(--primary); border-color: var(--primary); }
 #zoomLevel { padding: 0 10px; font-weight: bold; min-width: 50px; text-align: center; }
-
 .page-nav { display: flex; align-items: center; gap: 6px; background: #333; padding: 6px 10px; border-radius: 6px; border: 1px solid #555; }
 #pageInput { width: 50px; padding: 6px; background: #222; border: 1px solid #555; color: #fff; border-radius: 4px; text-align: center; font-size: 0.9rem; }
-#pageInput:focus { outline: none; border-color: var(--primary); }
 .page-nav span { font-size: 0.9rem; color: #ccc; }
 #goToPageBtn { padding: 6px 10px; font-size: 0.85rem; }
-
 .viewer-body { flex: 1; overflow: auto; padding: 20px; display: flex; justify-content: center; background: #525659; }
 #pdfContainer { transition: transform 0.2s ease; transform-origin: top center; display: flex; flex-direction: column; align-items: center; gap: 20px; padding-bottom: 50px; }
 #pdfContainer canvas { box-shadow: 0 5px 15px rgba(0,0,0,0.3); background: white; }
